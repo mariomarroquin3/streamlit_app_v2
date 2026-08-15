@@ -94,6 +94,7 @@ h1, h2, h3, h4, h5, h6, .serif-title {
     border-color: #005fec !important;
     background-color: #f1f5f9 !important;
 }
+
 .stFileUploader [data-testid="stMarkdownContainer"] p {
     color: #475569 !important;
     font-weight: 500 !important;
@@ -418,10 +419,29 @@ h1, h2, h3, h4, h5, h6, .serif-title {
 }
 
 /* Estilos de imagen con marco premium */
-.image-preview-container img {
+[data-testid="stImage"] img {
     border-radius: 16px !important;
     border: 1px solid #e2e8f0 !important;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    margin-bottom: 0.5rem !important;
+}
+
+[data-testid="stImage"] img:hover {
+    transform: translateY(-4px) scale(1.015) !important;
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.12) !important;
+}
+
+.image-preview-container {
+    padding: 0.5rem;
+}
+
+/* Descripción de Grad-CAM */
+.gradcam-desc {
+    color: #475569;
+    font-size: 0.98rem;
+    margin-bottom: 2rem;
+    line-height: 1.65;
 }
 
 /* Estilo para las barras de progreso personalizadas */
@@ -432,4 +452,29 @@ h1, h2, h3, h4, h5, h6, .serif-title {
 }
 .stProgress > div > div > div > div {
     background-color: #005fec !important;
+}
+
+/* =========================================================
+   AJUSTES ADICIONALES (HEADER Y TRANSICIONES)
+========================================================= */
+
+/* Hacer transparente la barra superior (Deploy/Menu) para evitar la franja blanca */
+[data-testid="stHeader"] {
+    background-color: transparent !important;
+}
+
+/* Animación de transición (Efecto Oleaje) */
+@keyframes fadeInSlideUp {
+    0% {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+[data-testid="stAppViewBlockContainer"] {
+    animation: fadeInSlideUp 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }

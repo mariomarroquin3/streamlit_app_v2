@@ -4,15 +4,7 @@ Página: Métricas — desempeño detallado del modelo.
 
 import streamlit as st
 
-from model_utils import inject_custom_css, load_model
-
-st.set_page_config(
-    page_title="Métricas — Retinopatía Diabética",
-    layout="wide",
-)
-
-# Inyectar estilos centralizados
-inject_custom_css()
+from model_utils import load_model
 
 st.title("Métricas del Modelo")
 st.caption("Evaluación cuantitativa del clasificador sobre conjuntos de validación y test.")

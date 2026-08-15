@@ -76,8 +76,6 @@ def inject_custom_css():
                 dark_css_content = f.read()
             st.markdown(f"<style>{dark_css_content}</style>", unsafe_allow_html=True)
 
-
-
 # ============================================================
 # PREPROCESAMIENTO
 # ============================================================

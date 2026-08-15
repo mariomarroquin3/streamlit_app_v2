@@ -5,3 +5,4 @@ timm>=0.9
 opencv-python-headless>=4.9
 Pillow>=10.0
 numpy>=1.26
+streamlit-option-menu

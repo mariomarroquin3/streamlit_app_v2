@@ -6,14 +6,6 @@ import streamlit as st
 
 from model_utils import inject_custom_css
 
-st.set_page_config(
-    page_title="Acerca — Retinopatía Diabética",
-    layout="wide",
-)
-
-# Inyectar estilos centralizados
-inject_custom_css()
-
 st.title("Acerca del Proyecto")
 st.caption("Detalles técnicos, dataset, arquitectura del modelo y limitaciones.")
 

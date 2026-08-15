@@ -13,18 +13,9 @@ from model_utils import (
     CLASS_NAMES,
     DISCLAIMER,
     NUM_CLASSES,
-    inject_custom_css,
     load_model,
     run_inference_with_gradcam,
 )
-
-st.set_page_config(
-    page_title="Clasificador — Retinopatía Diabética",
-    layout="wide",
-)
-
-# Inyectar estilos centralizados
-inject_custom_css()
 
 st.title("Clasificador Retinal")
 st.caption("Sube una imagen digital de fondo de ojo para su evaluación automatizada por el modelo.")
@@ -129,9 +120,9 @@ if uploaded_file is not None:
             )
 
     st.divider()
-    st.markdown("<h3>Mapa de Calor y Explicabilidad (Grad-CAM)</h3>", unsafe_allow_html=True)
+    st.markdown("<br><h3 style='margin-bottom: 0.5rem;'>Mapa de Calor y Explicabilidad (Grad-CAM)</h3>", unsafe_allow_html=True)
     st.markdown(
-        "<p style='color:#475569; font-size:0.95rem; margin-bottom:1.5rem;'>"
+        "<p class='gradcam-desc'>"
         "El mapa de calor (Grad-CAM) resalta las regiones de la retina que tuvieron el mayor peso en la decisión "
         "de clasificación del modelo. Un diagnóstico confiable suele correlacionarse con la activación de áreas "
         "con lesiones, hemorragias o la vecindad del disco óptico."

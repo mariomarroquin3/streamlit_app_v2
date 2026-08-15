@@ -40,14 +40,34 @@ h1, h2, h3, h4, h5, h6, .serif-title {
     border-right-color: #334155 !important;
 }
 
-[data-testid="stSidebar"] .stMarkdown, 
-[data-testid="stSidebarNav"] a, 
+[data-testid="stSidebar"] .stMarkdown,
+[data-testid="stSidebarNav"] a,
 [data-testid="stSidebarNav"] span {
     color: #e2e8f0 !important;
 }
 
 [data-testid="stSidebarNav"] a:hover {
     background-color: #334155 !important;
+}
+
+/* Pestañas más legibles en Modo Oscuro */
+.stTabs [data-baseweb="tab"] {
+    color: #94a3b8 !important;
+}
+.stTabs [data-baseweb="tab"][aria-selected="true"] {
+    color: #38bdf8 !important;
+    border-bottom-color: #38bdf8 !important;
+}
+
+/* Contorno oscuro para Imágenes */
+[data-testid="stImage"] img {
+    border-color: #334155 !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Texto Grad-CAM */
+.gradcam-desc {
+    color: #cbd5e1 !important;
 }
 
 /* Subida de Archivos (File Uploader) */
