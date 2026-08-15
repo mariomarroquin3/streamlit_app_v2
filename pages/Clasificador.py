@@ -8,20 +8,22 @@ import streamlit as st
 from PIL import Image
 
 from model_utils import (
-    CLASS_NAMES,
+    CLASS_COLORS,
     CLASS_DESCRIPTIONS,
+    CLASS_NAMES,
     DISCLAIMER,
     NUM_CLASSES,
     load_model,
     run_inference_with_gradcam,
 )
 
-st.set_page_config(page_title="Clasificador — Retinopatía Diabética", page_icon="🔬", layout="wide")
+st.title("Clasificador Retinal")
+st.caption("Sube una imagen digital de fondo de ojo para su evaluación automatizada por el modelo.")
 
-st.title("🔬 Clasificador")
-st.caption("Sube una imagen de fondo de ojo para analizarla con el modelo.")
-st.warning(DISCLAIMER)
+# Descargo de Responsabilidad Estilizado
+st.markdown(f'<div class="custom-disclaimer">{DISCLAIMER}</div>', unsafe_allow_html=True)
 
+# Cargar modelo y metadatos
 model, device, metadata = load_model()
 
 with st.sidebar:
@@ -42,13 +44,13 @@ with st.sidebar:
         st.metric("AUC-ROC macro", f"{tm.get('auc_roc_macro', 0):.3f}")
 
     st.divider()
-    st.header("Preprocesamiento aplicado")
+    st.header("Preprocesamiento")
     st.markdown(
         """
         1. Recorte de borde negro
-        2. CLAHE (realce de contraste local)
-        3. Máscara circular
-        4. Resize + normalización ImageNet
+        2. CLAHE (realce local de contraste)
+        3. Máscara circular retinal
+        4. Redimensión + Normalización ImageNet
         """
     )
 
@@ -57,13 +59,26 @@ uploaded_file = st.file_uploader(
     type=["jpg", "jpeg", "png"],
 )
 
-st.caption("¿No tienes una imagen a la mano? Puedes usar cualquier fotografía de fondoscopía retinal de dominio público para probar la app.")
+st.caption(
+    "¿No tienes una imagen a la mano? Puedes buscar y descargar cualquier fotografía de "
+    "fondoscopía retinal de dominio público para probar la herramienta."
+)
 
 if uploaded_file is not None:
-    image_pil = Image.open(io.BytesIO(uploaded_file.read())).convert("RGB")
-
-    with st.spinner("Analizando imagen..."):
-        result = run_inference_with_gradcam(model, device, image_pil)
+    file_bytes = uploaded_file.getvalue()
+    file_id = f"{uploaded_file.name}_{len(file_bytes)}"
+    
+    if st.session_state.get("last_file_id") != file_id:
+        image_pil = Image.open(io.BytesIO(file_bytes)).convert("RGB")
+        with st.spinner("Analizando imagen y calculando Grad-CAM..."):
+            result = run_inference_with_gradcam(model, device, image_pil)
+        
+        st.session_state["last_file_id"] = file_id
+        st.session_state["last_image"] = image_pil
+        st.session_state["last_result"] = result
+        
+    image_pil = st.session_state["last_image"]
+    result = st.session_state["last_result"]
 
     predicted_class = result["predicted_class"]
     probs = result["probs"]
@@ -73,15 +88,31 @@ if uploaded_file is not None:
 
     with col1:
         st.subheader("Imagen original")
-        st.image(image_pil, use_container_width=True)
+        st.markdown('<div class="image-preview-container">', unsafe_allow_html=True)
+        st.image(image_pil, width='stretch')
+        st.markdown('</div>', unsafe_allow_html=True)
 
     with col2:
-        st.subheader("Resultado")
-        st.markdown(f"### Clase {predicted_class} — {CLASS_NAMES[predicted_class]}")
-        st.markdown(CLASS_DESCRIPTIONS[predicted_class])
-        st.markdown(f"**Confianza:** {probs[predicted_class] * 100:.1f}%")
+        color = CLASS_COLORS[predicted_class]
+        st.markdown(
+            f"""
+            <div class="result-card">
+                <div class="result-header">Análisis Completado</div>
+                <div class="result-label" style="background-color: {color};">
+                    Clase {predicted_class} — {CLASS_NAMES[predicted_class]}
+                </div>
+                <p class="result-desc">
+                    {CLASS_DESCRIPTIONS[predicted_class]}
+                </p>
+                <div class="result-confidence">
+                    Nivel de confianza: <strong>{probs[predicted_class] * 100:.1f}%</strong>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
-        st.markdown("**Distribución de probabilidades:**")
+        st.markdown("<br><b>Distribución de probabilidades por clase:</b>", unsafe_allow_html=True)
         for cls_idx in range(NUM_CLASSES):
             st.progress(
                 float(probs[cls_idx]),
@@ -89,21 +120,31 @@ if uploaded_file is not None:
             )
 
     st.divider()
-    st.subheader("Grad-CAM — ¿en qué se fijó el modelo?")
-    st.caption(
-        "El mapa de calor muestra las regiones que más influyeron en la predicción. "
-        "Idealmente debería concentrarse en el disco óptico, vasos sanguíneos y lesiones "
-        "retinales — no en bordes o artefactos de la imagen."
+    st.markdown("<br><h3 style='margin-bottom: 0.5rem;'>Mapa de Calor y Explicabilidad (Grad-CAM)</h3>", unsafe_allow_html=True)
+    st.markdown(
+        "<p class='gradcam-desc'>"
+        "El mapa de calor (Grad-CAM) resalta las regiones de la retina que tuvieron el mayor peso en la decisión "
+        "de clasificación del modelo. Un diagnóstico confiable suele correlacionarse con la activación de áreas "
+        "con lesiones, hemorragias o la vecindad del disco óptico."
+        "</p>",
+        unsafe_allow_html=True,
     )
 
     col3, col4, col5 = st.columns(3)
     with col3:
-        st.image(result["processed_image"], caption="Imagen preprocesada", use_container_width=True)
+        st.markdown('<div class="image-preview-container">', unsafe_allow_html=True)
+        st.image(result["processed_image"], caption="1. Imagen preprocesada", width='stretch')
+        st.markdown('</div>', unsafe_allow_html=True)
     with col4:
-        st.image(result["heatmap_image"], caption="Mapa de activación", use_container_width=True)
+        st.markdown('<div class="image-preview-container">', unsafe_allow_html=True)
+        st.image(result["heatmap_image"], caption="2. Mapa de activación (Capa final)", width='stretch')
+        st.markdown('</div>', unsafe_allow_html=True)
     with col5:
-        st.image(result["overlay_image"], caption="Grad-CAM superpuesto", use_container_width=True)
+        st.markdown('<div class="image-preview-container">', unsafe_allow_html=True)
+        st.image(result["overlay_image"], caption="3. Grad-CAM superpuesto", width='stretch')
+        st.markdown('</div>', unsafe_allow_html=True)
 
+    st.markdown("<br>", unsafe_allow_html=True)
     with st.expander("Descargar resultados"):
         buf = io.BytesIO()
         result["overlay_image"].save(buf, format="PNG")

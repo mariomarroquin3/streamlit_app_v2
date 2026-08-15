@@ -35,22 +35,46 @@ CLASS_DESCRIPTIONS = {
 }
 
 CLASS_COLORS = {
-    0: "#2ecc71",
-    1: "#f1c40f",
-    2: "#e67e22",
-    3: "#e74c3c",
-    4: "#8e44ad",
+    0: "#10b981",  # Emerald Green (Healthy)
+    1: "#f59e0b",  # Amber (Mild)
+    2: "#f97316",  # Orange (Moderate)
+    3: "#ef4444",  # Red (Severe)
+    4: "#a855f7",  # Purple (Proliferative)
 }
 
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
 IMAGENET_STD = [0.229, 0.224, 0.225]
 
 DISCLAIMER = (
-    "⚠️ **Este proyecto es académico/demostrativo, NO un dispositivo médico.** "
+    "Aviso Importante: Este proyecto es académico/demostrativo, NO un dispositivo médico. "
     "No debe usarse para diagnóstico clínico. Cualquier hallazgo debe ser confirmado por "
     "un profesional de salud oftalmológica."
 )
 
+
+def inject_custom_css():
+    if "dark_mode" not in st.session_state:
+        st.session_state.dark_mode = False
+        
+    col_empty, col_toggle = st.columns([8, 2])
+    with col_toggle:
+        dark_mode = st.toggle("Modo Oscuro", value=st.session_state.dark_mode, key="top_dark_mode_toggle")
+        
+    # Guardamos el estado; Streamlit ya recarga automáticamente al tocar el toggle
+    st.session_state.dark_mode = dark_mode
+
+    css_path = Path(__file__).parent / "style.css"
+    if css_path.exists():
+        with open(css_path, "r", encoding="utf-8") as f:
+            css_content = f.read()
+        st.markdown(f"<style>{css_content}</style>", unsafe_allow_html=True)
+        
+    if st.session_state.dark_mode:
+        dark_css_path = Path(__file__).parent / "dark_style.css"
+        if dark_css_path.exists():
+            with open(dark_css_path, "r", encoding="utf-8") as f:
+                dark_css_content = f.read()
+            st.markdown(f"<style>{dark_css_content}</style>", unsafe_allow_html=True)
 
 # ============================================================
 # PREPROCESAMIENTO
