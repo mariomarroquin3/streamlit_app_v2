@@ -1,85 +1,94 @@
-# Clasificador de Retinopatía Diabética — App Streamlit (multipágina)
-
-App completa con landing page, clasificador con Grad-CAM, dashboard de métricas y
-página de metodología.
-
-## Estructura
+## Estructura del proyecto
 
 ```
-streamlit_app_v2/
-├── Home.py                        # Landing page (punto de entrada)
-├── model_utils.py                 # Módulo compartido: modelo, preprocesamiento, Grad-CAM
+webapp/
+├── app.py                 # Servidor Flask: rutas de páginas + API JSON
+├── inference.py            # Carga del modelo, preprocesamiento y Grad-CAM
 ├── requirements.txt
-├── .streamlit/
-│   └── config.toml                # Tema visual
 ├── model/
-│   └── best_model_v2.pth          # Checkpoint entrenado (~40 MB)
-└── pages/
-    ├── 1_🔬_Clasificador.py       # Sube imagen → predicción + Grad-CAM
-    ├── 2_📊_Métricas.py           # Dashboard de métricas (test/validación)
-    └── 3_ℹ️_Acerca.py             # Metodología, dataset, limitaciones
+│   └── best_model_v2.pth   # Checkpoint entrenado (EfficientNet-B3)
+├── templates/               # Páginas Jinja2
+│   ├── base.html            # Layout compartido (header, footer, tema oscuro)
+│   ├── index.html           # Inicio
+│   ├── classifier.html      # Clasificador
+│   ├── metrics.html         # Métricas
+│   └── about.html           # Acerca del proyecto
+└── static/
+    ├── css/styles.css       # Sistema de diseño completo
+    ├── js/
+    │   ├── app.js            # Tema oscuro/claro, menú móvil
+    │   └── classifier.js     # Subida de imagen, llamada a la API, resultados
+    └── img/favicon.svg
 ```
 
-Streamlit detecta automáticamente la carpeta `pages/` y genera la navegación lateral
-con esos archivos, en el orden dado por el prefijo numérico.
+## Instalación
 
-## Probar localmente
+Requiere Python 3.10+.
 
 ```bash
-cd streamlit_app_v2
+cd webapp
+python -m venv venv
+source venv/bin/activate        # En Windows: venv\Scripts\activate
 pip install -r requirements.txt
-streamlit run Home.py
 ```
 
-Abre `http://localhost:8501`. La navegación entre páginas aparece en el sidebar.
+> **Nota sobre PyTorch:** si tu equipo tiene GPU con CUDA, instala la variante de `torch` /
+> `torchvision` correspondiente desde https://pytorch.org/get-started/locally/ *antes* de correr
+> `pip install -r requirements.txt`, o edita esa línea para que apunte al índice de PyTorch con
+> soporte CUDA. Sin GPU, la versión CPU funciona sin cambios adicionales (algo más lenta por
+> imagen).
 
-## Desplegar en Streamlit Community Cloud
-
-### 1. Sube el proyecto a GitHub
+## Ejecución en desarrollo
 
 ```bash
-cd streamlit_app_v2
-git init
-git add .
-git commit -m "Diabetic retinopathy classifier — multipage app"
-git remote add origin https://github.com/<tu-usuario>/<nombre-repo>.git
-git branch -M main
-git push -u origin main
+python app.py
 ```
 
-`best_model_v2.pth` pesa ~40 MB, dentro del límite de GitHub (100 MB) — no necesitas Git LFS.
+Esto levanta el servidor en `http://127.0.0.1:5000`. El modelo se carga de forma perezosa (la
+primera petición que lo necesite tarda unos segundos más mientras se carga el checkpoint en
+memoria; las siguientes son inmediatas).
 
-### 2. Conecta el repo a Streamlit Cloud
+## Ejecución en producción
 
-1. Ve a [share.streamlit.io](https://share.streamlit.io) e inicia sesión con GitHub.
-2. **"New app"** → selecciona el repo y la rama `main`.
-3. **Archivo principal:** `Home.py` (no `app.py` — cambió el punto de entrada en esta versión).
-4. **Deploy.**
+El servidor de desarrollo de Flask (`python app.py`) no está pensado para producción. Usa
+`gunicorn` (incluido en `requirements.txt`):
 
-### 3. Si falla por memoria
-
-Si ves errores de memoria en el tier gratuito (~1 GB RAM), fija una versión CPU-only de
-PyTorch al inicio de `requirements.txt`:
-
-```
---extra-index-url https://download.pytorch.org/whl/cpu
-torch>=2.2
+```bash
+gunicorn -w 2 -b 0.0.0.0:8000 app:app
 ```
 
-## Qué cambió respecto a la versión anterior (app.py único)
+Usa `-w 1` si la memoria disponible es limitada — cada worker carga su propia copia del modelo en
+memoria la primera vez que lo necesita.
 
-- **Landing page** (`Home.py`) con hero, métricas destacadas, explicación del pipeline
-  en 4 pasos, y tarjetas para los 5 niveles de severidad.
-- **Navegación multipágina** — Clasificador, Métricas y Acerca del proyecto separados.
-- **`model_utils.py`** centraliza el modelo/preprocesamiento/Grad-CAM para que todas
-  las páginas usen exactamente la misma lógica (nada duplicado).
-- **Tema visual** vía `.streamlit/config.toml`.
-- **Botón de descarga** de la imagen Grad-CAM resultante en la página del clasificador.
+## Páginas y rutas
 
-## Notas técnicas
+| Ruta                | Página                                             |
+|----------------------|-----------------------------------------------------|
+| `/`                  | Inicio — presentación del proyecto y métricas clave |
+| `/clasificador`      | Subida de imagen y resultado con Grad-CAM            |
+| `/metricas`          | Métricas de validación y test (QWK, F1, AUC, etc.)   |
+| `/acerca`            | Metodología, dataset, arquitectura y limitaciones    |
+| `POST /api/clasificar` | API JSON: recibe una imagen, devuelve la predicción |
+| `GET /api/salud`     | Estado del modelo (para monitoreo/healthchecks)      |
 
-- El preprocesamiento (recorte de borde negro + CLAHE + máscara circular) replica
-  exactamente el usado en entrenamiento — no modificarlo sin volver a entrenar.
-- Grad-CAM apunta a `model.conv_head`, la última capa convolucional de EfficientNet-B3 en `timm`.
-- `@st.cache_resource` en `load_model()` evita recargar el modelo en cada interacción
-  o al cambiar de página — se carga una sola vez por sesión.
+## Qué cambió respecto a la versión Streamlit
+
+- **Streamlit eliminado por completo** — ya no hay `st.Page`, `st.navigation` ni widgets nativos de
+  Streamlit. Todo el frontend es HTML/CSS/JS propio servido por Flask.
+- **Diseño rediseñado desde cero**: paleta clínica (tinta marina + teal de instrumental oftálmico),
+  tipografía editorial (Lora + Plus Jakarta Sans + IBM Plex Mono para datos), un gráfico SVG
+  animado de "escaneo de retina" en el hero, tarjetas de métricas tipo instrumento, y modo
+  oscuro/claro persistente (`localStorage`).
+- **Subida de imagen por arrastrar-y-soltar** (drag & drop) en vez del uploader nativo de Streamlit,
+  con vista previa, manejo de errores y barras de probabilidad animadas por clase.
+- **Arquitectura cliente-servidor real**: la clasificación ocurre vía `fetch` a una API JSON
+  (`/api/clasificar`), lo que hace mucho más simple desplegar el frontend y el backend por
+  separado si se desea en el futuro.
+- **La lógica de IA no cambió**: mismo backbone (EfficientNet-B3), mismo pipeline de
+  preprocesamiento (recorte de borde negro → CLAHE → máscara circular → normalización), mismo
+  algoritmo de Grad-CAM sobre `conv_head`, mismas métricas guardadas en el checkpoint.
+
+## Aviso
+
+Este proyecto es académico/demostrativo. No constituye un dispositivo médico ni debe usarse para
+diagnóstico clínico real.

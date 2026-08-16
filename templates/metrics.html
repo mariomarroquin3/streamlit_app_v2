@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Métricas{% endblock %}
+
+{% macro metric_row(metrics) %}
+<div class="metric-grid" style="grid-template-columns: repeat(3, 1fr);">
+  <div class="metric-card">
+    <div class="metric-value">{{ '%.4f'|format(metrics.get('qwk')) if metrics.get('qwk') is not none else '—' }}</div>
+    <div class="metric-label">QWK</div>
+    <p class="metric-desc">Quadratic Weighted Kappa (métrica principal)</p>
+  </div>
+  <div class="metric-card">
+    <div class="metric-value">{{ '%.4f'|format(metrics.get('f1_macro')) if metrics.get('f1_macro') is not none else '—' }}</div>
+    <div class="metric-label">F1 macro</div>
+    <p class="metric-desc">F1 promedio sin ponderar entre clases</p>
+  </div>
+  <div class="metric-card">
+    <div class="metric-value">{{ '%.4f'|format(metrics.get('f1_weighted')) if metrics.get('f1_weighted') is not none else '—' }}</div>
+    <div class="metric-label">F1 weighted</div>
+    <p class="metric-desc">F1 promedio ponderado por soporte</p>
+  </div>
+  <div class="metric-card">
+    <div class="metric-value">{{ '%.4f'|format(metrics.get('balanced_acc')) if metrics.get('balanced_acc') is not none else '—' }}</div>
+    <div class="metric-label">Balanced Acc.</div>
+    <p class="metric-desc">Exactitud balanceada por clase</p>
+  </div>
+  <div class="metric-card">
+    <div class="metric-value">{{ '%.4f'|format(metrics.get('accuracy')) if metrics.get('accuracy') is not none else '—' }}</div>
+    <div class="metric-label">Accuracy</div>
+    <p class="metric-desc">Exactitud global simple</p>
+  </div>
+  <div class="metric-card">
+    <div class="metric-value">{{ '%.4f'|format(metrics.get('auc_roc_macro')) if metrics.get('auc_roc_macro') is not none else '—' }}</div>
+    <div class="metric-label">AUC-ROC macro</div>
+    <p class="metric-desc">Área bajo la curva ROC (macro promedio)</p>
+  </div>
+  <div class="metric-card">
+    <div class="metric-value">{{ '%.4f'|format(metrics.get('auc_pr_macro')) if metrics.get('auc_pr_macro') is not none else '—' }}</div>
+    <div class="metric-label">AUC-PR macro</div>
+    <p class="metric-desc">Área bajo curva Precisión-Recall (macro)</p>
+  </div>
+</div>
+{% endmacro %}
+
+{% block content %}
+<section class="page-header">
+  <div class="shell">
+    <span class="eyebrow">Evaluación</span>
+    <h1>Métricas del modelo</h1>
+    <p>Evaluación cuantitativa del clasificador sobre los conjuntos de validación y test.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="shell">
+    {% if not test_metrics %}
+      <div class="disclaimer-banner">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <p>No hay métricas guardadas en este checkpoint.</p>
+      </div>
+    {% else %}
+      <div class="tabs" role="tablist">
+        <button type="button" class="tab-btn is-active" data-tab="test" role="tab" aria-selected="true">Test (evaluación final)</button>
+        <button type="button" class="tab-btn" data-tab="val" role="tab" aria-selected="false">Validación (entrenamiento)</button>
+      </div>
+
+      <div class="tab-panel is-active" id="tab-test">
+        {{ metric_row(test_metrics) }}
+      </div>
+      <div class="tab-panel" id="tab-val">
+        {{ metric_row(val_metrics) }}
+      </div>
+    {% endif %}
+
+    <div class="explainer" style="margin-top: 40px;">
+      <h2>¿Por qué QWK y no solo accuracy?</h2>
+      <p>
+        Este problema posee clases ordinales (0 = sin retinopatía → 4 = proliferativa), no categorías
+        independientes. La exactitud (accuracy) simple trata todas las fallas por igual, pero confundir
+        "sin retinopatía" con "leve" es un error mucho menos grave que confundirla con la etapa
+        "proliferativa".
+      </p>
+      <p>
+        El Quadratic Weighted Kappa (QWK) penaliza las confusiones de manera proporcional al cuadrado
+        de su distancia en la escala ordinal. Es la métrica oficial y estándar de oro en la competencia
+        EyePACS de Kaggle, en la cual se fundamenta el entrenamiento de este clasificador.
+      </p>
+    </div>
+
+    <div class="explainer">
+      <h2>Estrategia frente al desbalance de clases</h2>
+      <p>
+        El conjunto de datos EyePACS presenta un fuerte desbalance de clases: la categoría "sin
+        retinopatía" abarca aproximadamente el 74% de las muestras, mientras que las etapas severa y
+        proliferativa (3 y 4) juntas representan menos del 5%. Para evitar que el modelo se sesgara
+        hacia la clase mayoritaria, se aplicaron:
+      </p>
+      <ul>
+        <li><b>Focal Loss con pesos por clase</b> — penaliza con mayor severidad las clasificaciones erróneas en clases minoritarias.</li>
+        <li><b>Aumento extremo de datos</b> — rotación, volteo, jitter de color y random erasing aplicados dinámicamente durante el entrenamiento.</li>
+        <li><b>Regularización estructural</b> — dropout, stochastic depth (drop-path) y weight decay en el backbone de EfficientNet-B3.</li>
+      </ul>
+      <p class="note">
+        Nota: a pesar de estas mitigaciones, la clase "leve" (nivel 1) continúa representando el desafío
+        diagnóstico más alto debido a la sutil diferencia física en los microaneurismas tempranos.
+      </p>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var buttons = document.querySelectorAll(".tab-btn");
+  buttons.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      buttons.forEach(function (b) {
+        b.classList.remove("is-active");
+        b.setAttribute("aria-selected", "false");
+      });
+      document.querySelectorAll(".tab-panel").forEach(function (p) { p.classList.remove("is-active"); });
+      btn.classList.add("is-active");
+      btn.setAttribute("aria-selected", "true");
+      document.getElementById("tab-" + btn.dataset.tab).classList.add("is-active");
+    });
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}Acerca del proyecto{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="shell">
+    <span class="eyebrow">Metodología</span>
+    <h1>Acerca del proyecto</h1>
+    <p>Detalles técnicos, dataset, arquitectura del modelo y limitaciones conocidas.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="shell two-col">
+    <div>
+      <h2>Objetivo del proyecto</h2>
+      <p>
+        El propósito principal de este proyecto es construir un pipeline de deep learning robusto,
+        capaz de recibir una imagen digital de fondo de ojo y clasificarla en uno de los 5 niveles de
+        severidad de la retinopatía diabética.
+      </p>
+      <p>
+        Además, se incorpora explicabilidad visual mediante el algoritmo Grad-CAM con el fin de
+        auditar la toma de decisiones de la red, asegurando que el modelo se enfoque en
+        características retinales anómalas (microhemorragias, exudados duros, neovasos) en lugar de
+        artefactos visuales irrelevantes.
+      </p>
+    </div>
+    <div>
+      <h2>Dataset EyePACS</h2>
+      <ul>
+        <li><b>Fuente:</b> base de datos pública <a href="https://www.kaggle.com/c/diabetic-retinopathy-detection" target="_blank" rel="noopener">EyePACS — Diabetic Retinopathy (Kaggle)</a>.</li>
+        <li><b>Tamaño:</b> aproximadamente 35,000 imágenes etiquetadas del fondo del ojo.</li>
+        <li><b>Desbalance de clases:</b> altamente desbalanceado. La clase 0 (sin retinopatía) representa la mayoría abrumadora del dataset, mientras que los estadios severo y proliferativo (clases 3 y 4) son sumamente escasos, lo cual requirió estrategias avanzadas durante el entrenamiento.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section class="section">
+  <div class="shell">
+    <div class="section-head">
+      <span class="eyebrow">Preprocesamiento</span>
+      <h2>Pipeline de preprocesamiento</h2>
+      <p>Con el fin de estandarizar las fotografías provenientes de distintos tipos de cámaras y condiciones lumínicas, cada imagen de entrada se procesa en cuatro fases antes de ser analizada por la red neuronal.</p>
+    </div>
+    <div class="step-grid">
+      <div class="step-card">
+        <div class="step-number">01</div>
+        <b>Recorte de borde negro</b>
+        <p>Elimina los márgenes inactivos de la fotografía para centrarse únicamente en el círculo retinal.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">02</div>
+        <b>Realce CLAHE</b>
+        <p>Histograma local adaptativo que incrementa el contraste local, resaltando lesiones pequeñas o microaneurismas.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">03</div>
+        <b>Máscara circular</b>
+        <p>Aplica un filtro que enmascara y remueve cualquier ruido o artefacto fuera del área circular de la retina.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">04</div>
+        <b>Normalización</b>
+        <p>Redimensiona la imagen a 300×300 píxeles y aplica normalización estadística estándar del dataset ImageNet.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section class="section">
+  <div class="shell two-col">
+    <div>
+      <h2>Detalles del modelo</h2>
+      <ul>
+        <li><b>Arquitectura:</b> backbone convolucional EfficientNet-B3, preentrenado en ImageNet (librería <code>timm</code>).</li>
+        <li><b>Función de pérdida:</b> Focal Loss ponderada por clase. Ayuda a ignorar muestras ya aprendidas con facilidad y obliga al modelo a concentrarse en las clases raras y casos límite.</li>
+        <li><b>Regularización:</b> Stochastic Depth (drop-path), Dropout y Weight Decay para mitigar sobreajustes hacia la clase mayoritaria.</li>
+        <li><b>Entrenamiento:</b> realizado en dos fases (congelación inicial del extractor y fine-tuning completo posterior) con tasas de aprendizaje diferenciadas y scheduler <code>ReduceLROnPlateau</code>.</li>
+      </ul>
+    </div>
+    <div>
+      <h2>Explicabilidad — Grad-CAM</h2>
+      <p>
+        Grad-CAM (Gradient-weighted Class Activation Mapping) calcula la importancia de cada píxel
+        respecto a la clase predicha, analizando los gradientes que fluyen hacia la última capa
+        convolucional de la red (<code>conv_head</code> de la EfficientNet).
+      </p>
+      <p>
+        Esto genera un mapa de calor intuitivo. Si el modelo predice retinopatía proliferativa, es
+        posible validar visualmente si la red está reaccionando a neovascularizaciones y hemorragias
+        reales, o a un sesgo indeseado (como reflejos del lente en el borde retinal), garantizando un
+        sistema auditable.
+      </p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section class="section">
+  <div class="shell">
+    <div class="section-head">
+      <span class="eyebrow">Alcance</span>
+      <h2>Limitaciones conocidas</h2>
+    </div>
+    <div class="limits-list">
+      <div class="limit-item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <div>
+          <b>Frontera normal vs. leve</b>
+          <p>La diferencia clínica entre clase 0 y clase 1 (presencia de un único o muy pocos microaneurismas) es en ocasiones extremadamente sutil, siendo el punto donde el clasificador presenta mayor índice de confusión.</p>
+        </div>
+      </div>
+      <div class="limit-item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <div>
+          <b>Sensibilidad de dominio</b>
+          <p>Entrenado exclusivamente con imágenes de EyePACS. El desempeño en equipos médicos no representados en el dataset de entrenamiento podría verse alterado.</p>
+        </div>
+      </div>
+      <div class="limit-item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <div>
+          <b>No diagnóstico</b>
+          <p>Esta aplicación tiene exclusivamente fines educativos e investigativos. Las predicciones del clasificador no deben ser tomadas bajo ningún concepto como diagnóstico clínico formal.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

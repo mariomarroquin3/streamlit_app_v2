@@ -1,8 +1,9 @@
-streamlit>=1.32
+Flask>=3.0
+Werkzeug>=3.0
 torch>=2.2
 torchvision>=0.17
 timm>=0.9
 opencv-python-headless>=4.9
 Pillow>=10.0
 numpy>=1.26
-streamlit-option-menu
+gunicorn>=21.2

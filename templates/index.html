@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block title %}Inicio{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+  <div class="shell hero-grid">
+    <div>
+      <span class="eyebrow">Apoyo diagnóstico basado en IA</span>
+      <h1>Clasificador de retinopatía diabética con explicabilidad visual</h1>
+      <p class="hero-lede">
+        Un modelo de deep learning basado en EfficientNet-B3 analiza imágenes de fondo de ojo y
+        estima el nivel de severidad de la retinopatía diabética en una escala de cinco niveles,
+        mostrando además un mapa de calor Grad-CAM sobre las zonas que motivaron la decisión.
+      </p>
+      <div class="hero-cta">
+        <a href="{{ url_for('classifier_page') }}" class="btn btn-primary">Probar el clasificador</a>
+        <a href="{{ url_for('about_page') }}" class="btn btn-ghost">Cómo funciona</a>
+      </div>
+      <div class="hero-meta">
+        <span><strong>EfficientNet-B3</strong> · backbone</span>
+        <span><strong>5 clases</strong> · severidad ordinal</span>
+        <span><strong>Grad-CAM</strong> · explicabilidad</span>
+        <span><strong>EyePACS</strong> · dataset</span>
+      </div>
+    </div>
+
+    <div class="retina-figure">
+      <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Representación estilizada de un fondo de ojo escaneado por el modelo">
+        <defs>
+          <radialGradient id="retinaGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#17b3ab" stop-opacity="0.32"/>
+            <stop offset="100%" stop-color="#17b3ab" stop-opacity="0"/>
+          </radialGradient>
+          <linearGradient id="scanGrad" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stop-color="#17b3ab" stop-opacity="0"/>
+            <stop offset="100%" stop-color="#17b3ab" stop-opacity="0.95"/>
+          </linearGradient>
+        </defs>
+
+        <circle cx="200" cy="200" r="190" fill="url(#retinaGlow)"/>
+        <circle cx="200" cy="200" r="150" fill="none" stroke="#2a4a5c" stroke-width="1"/>
+
+        <g stroke="#3f6577" stroke-width="1.4" fill="none" opacity="0.7" stroke-linecap="round">
+          <path d="M200 60 C 150 100, 140 160, 170 200 C 145 220, 110 230, 80 220"/>
+          <path d="M200 60 C 250 100, 260 160, 230 200 C 255 220, 290 230, 320 220"/>
+          <path d="M200 340 C 150 300, 140 240, 170 200"/>
+          <path d="M200 340 C 250 300, 260 240, 230 200"/>
+          <path d="M170 200 C 130 195, 100 175, 90 150"/>
+          <path d="M230 200 C 270 195, 300 175, 310 150"/>
+        </g>
+
+        <circle class="retina-ring-rotate" cx="200" cy="200" r="120" fill="none" stroke="#17b3ab" stroke-width="1.4" stroke-dasharray="4 10" opacity="0.75"/>
+
+        <g class="retina-scan-line">
+          <line x1="200" y1="200" x2="200" y2="38" stroke="url(#scanGrad)" stroke-width="3"/>
+        </g>
+
+        <circle class="retina-pulse" cx="200" cy="200" r="34" fill="none" stroke="#17b3ab" stroke-width="1.6"/>
+        <circle cx="200" cy="200" r="16" fill="#0f2b38" stroke="#17b3ab" stroke-width="1.4"/>
+        <circle cx="200" cy="200" r="5" fill="#17b3ab"/>
+      </svg>
+
+      <div class="metric-chip chip-1">
+        <span class="chip-value">{{ '%.3f'|format(test_metrics.get('qwk')) if test_metrics.get('qwk') is not none else '—' }}</span>
+        <span class="chip-label">QWK</span>
+      </div>
+      <div class="metric-chip chip-2">
+        <span class="chip-value">{{ '%.3f'|format(test_metrics.get('f1_macro')) if test_metrics.get('f1_macro') is not none else '—' }}</span>
+        <span class="chip-label">F1 macro</span>
+      </div>
+      <div class="metric-chip chip-3">
+        <span class="chip-value">{{ '%.3f'|format(test_metrics.get('auc_roc_macro')) if test_metrics.get('auc_roc_macro') is not none else '—' }}</span>
+        <span class="chip-label">AUC-ROC</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="shell">
+  <div class="disclaimer-banner">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <p>{{ disclaimer }}</p>
+  </div>
+</div>
+
+<section class="section-tight">
+  <div class="shell">
+    <div class="section-head">
+      <span class="eyebrow">Desempeño</span>
+      <h2>Resultados sobre el conjunto de test</h2>
+      <p>Métricas calculadas sobre datos que el modelo no vio durante el entrenamiento.</p>
+    </div>
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-value">{{ '%.3f'|format(test_metrics.get('qwk')) if test_metrics.get('qwk') is not none else '—' }}</div>
+        <div class="metric-label">QWK</div>
+        <p class="metric-desc">Quadratic Weighted Kappa (métrica principal)</p>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">{{ '%.3f'|format(test_metrics.get('f1_macro')) if test_metrics.get('f1_macro') is not none else '—' }}</div>
+        <div class="metric-label">F1 macro</div>
+        <p class="metric-desc">Promedio no ponderado entre las 5 clases</p>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">{{ '%.3f'|format(test_metrics.get('balanced_acc')) if test_metrics.get('balanced_acc') is not none else '—' }}</div>
+        <div class="metric-label">Balanced Acc.</div>
+        <p class="metric-desc">Exactitud ajustada por desbalance de clases</p>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">{{ '%.3f'|format(test_metrics.get('auc_roc_macro')) if test_metrics.get('auc_roc_macro') is not none else '—' }}</div>
+        <div class="metric-label">AUC-ROC</div>
+        <p class="metric-desc">Área bajo la curva ROC (macro promedio)</p>
+      </div>
+    </div>
+    <p class="metric-note">
+      QWK (Quadratic Weighted Kappa) es la métrica estándar para este problema porque las clases son
+      ordinales — penaliza más confundir "sin retinopatía" con "proliferativa" que confundir niveles adyacentes.
+    </p>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section class="section">
+  <div class="shell">
+    <div class="section-head">
+      <span class="eyebrow">Pipeline</span>
+      <h2>¿Cómo funciona el análisis?</h2>
+      <p>Cuatro fases secuenciales, desde la imagen original hasta el mapa de explicabilidad.</p>
+    </div>
+    <div class="step-grid">
+      <div class="step-card">
+        <div class="step-number">01</div>
+        <b>Sube una imagen</b>
+        <p>Una fotografía digital de fondo de ojo (fondoscopía), en formato JPG o PNG.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">02</div>
+        <b>Preprocesamiento</b>
+        <p>Se recorta el borde negro, se realza el contraste (CLAHE) y se aplica una máscara circular.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">03</div>
+        <b>Clasificación</b>
+        <p>EfficientNet-B3 estima la probabilidad de cada uno de los 5 niveles de severidad.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">04</div>
+        <b>Explicabilidad</b>
+        <p>Grad-CAM genera un mapa de calor sobre las zonas que más influyeron en la predicción.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section class="section">
+  <div class="shell editorial">
+    <div>
+      <span class="eyebrow">Por qué importa</span>
+      <h2>La recuperación empieza con un diagnóstico preciso</h2>
+      <div class="editorial-heading">IA al servicio de la salud ocular</div>
+      <p>
+        El diagnóstico oportuno de la retinopatía diabética puede prevenir la ceguera en millones de
+        pacientes. Este modelo evalúa de forma automatizada las alteraciones en la retina a partir de
+        una sola toma digital, proporcionando una herramienta de soporte clínico inmediata.
+      </p>
+      <div class="editorial-heading">Mapas de explicabilidad clínica</div>
+      <p>
+        El modelo no solo entrega un veredicto. Gracias al algoritmo Grad-CAM, es posible ver un mapa
+        de calor que resalta las microhemorragias, exudados o vasos anormales que justifican la
+        decisión, añadiendo una capa de auditoría clave.
+      </p>
+      <a href="{{ url_for('classifier_page') }}" class="btn btn-primary">Comenzar análisis ahora</a>
+    </div>
+    <div class="editorial-image">
+      <img src="https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&q=80&w=700" alt="Oftalmólogo examinando fondo de ojo" loading="lazy">
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section class="section">
+  <div class="shell">
+    <div class="section-head">
+      <span class="eyebrow">Escala ordinal</span>
+      <h2>Los 5 niveles de severidad de la retinopatía diabética</h2>
+    </div>
+    <div class="severity-grid">
+      {% for i in range(5) %}
+      <div class="severity-card" style="border-left-color: {{ class_colors[i] }};">
+        <div class="sev-index">Nivel {{ i }}</div>
+        <div class="sev-title">{{ class_names[i] }}</div>
+        <p>{{ class_descriptions[i] }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}

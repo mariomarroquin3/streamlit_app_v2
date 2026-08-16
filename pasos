@@ -1,7 +1,0 @@
-py -m venv venv
-
-Activar el entorno: .\venv\Scripts\activate
-
-Instalar dependencias: py -m pip install -r requirements.txt
-
-Ejecutar Streamlit: py -m streamlit run Home.py
