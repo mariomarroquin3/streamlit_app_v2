@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% block title %}Lugares de Ayuda y Hospitales Oftalmológicos{% endblock %}
+
+{% block head %}
+<!-- Leaflet CSS para OpenStreetMap -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="shell">
+    <span class="eyebrow">Red de Atención y Especialistas de Retina</span>
+    <h1>Centros de Atención para Retinopatía Diabética</h1>
+    <p>Localiza centros oftalmológicos, institutos de la visión y clínicas especializadas en retina y retinopatía diabética cercanos a tu ubicación mediante OpenStreetMap (OSM).</p>
+  </div>
+</section>
+
+<div class="shell">
+  <div class="disclaimer-banner">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <p><strong>Orientación médica importante:</strong> Si el clasificador detecta indicios de severidad o experimentas pérdida de visión, manchas oscuras flotantes o visión borrosa, acude prioritariamente a una <strong>unidad de retina o centro oftalmológico</strong> para un examen de fondo de ojo o tratamiento láser / anti-VEGF.</p>
+  </div>
+</div>
+
+<section class="section-tight">
+  <div class="shell map-section-container">
+
+    <!-- Barra de búsqueda y controles superiores -->
+    <div class="map-controls-bar">
+      
+      <!-- Fila 1: Filtro Opcional de País y Ciudad + Buscador manual -->
+      <div class="location-pickers-row">
+        <div class="country-city-group">
+          <div class="select-field-wrapper">
+            <label for="countrySelect" class="control-sublabel">🌎 País (Opcional):</label>
+            <select id="countrySelect" class="form-select control-select">
+              <option value="" selected>-- Seleccionar país (Opcional) --</option>
+              <option value="GT">Guatemala</option>
+              <option value="SV">El Salvador</option>
+              <option value="MX">México</option>
+              <option value="HN">Honduras</option>
+              <option value="CR">Costa Rica</option>
+              <option value="NI">Nicaragua</option>
+              <option value="PA">Panamá</option>
+              <option value="CO">Colombia</option>
+              <option value="PE">Perú</option>
+              <option value="AR">Argentina</option>
+              <option value="CL">Chile</option>
+              <option value="ES">España</option>
+              <option value="OTHER">Otro país / Búsqueda libre</option>
+            </select>
+          </div>
+
+          <div class="select-field-wrapper">
+            <label for="citySelect" class="control-sublabel">🏙️ Ciudad (Opcional):</label>
+            <select id="citySelect" class="form-select control-select">
+              <option value="">-- Elige primero un país --</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="search-input-group flex-1">
+          <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="addressInput" placeholder="Escribe cualquier ciudad, municipio o dirección libremente..." autocomplete="off">
+          <button type="button" id="btnSearchAddress" class="btn btn-secondary btn-sm">Buscar</button>
+        </div>
+      </div>
+
+      <!-- Fila 2: Acciones rápidas de ubicación y filtros -->
+      <div class="filter-controls-row">
+        <div class="location-actions-group">
+          <button type="button" id="btnGeolocate" class="btn btn-primary btn-sm btn-geo" title="Detectar tu ubicación mediante el GPS">
+            <svg class="geo-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+            <span>Usar GPS</span>
+          </button>
+
+          <button type="button" id="btnMapClickMode" class="btn btn-ghost btn-sm btn-pin-toggle" title="Haz clic en cualquier punto del mapa para colocar tu ubicación">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span>Fijar punto en el mapa</span>
+          </button>
+        </div>
+
+        <div class="filter-pills" id="categoryFilters">
+          <button type="button" class="filter-pill is-active" data-filter="all">Todos los centros oftalmológicos</button>
+          <button type="button" class="filter-pill" data-filter="retina">
+            <span class="pill-dot dot-retina"></span> Especialistas en Retina
+          </button>
+          <button type="button" class="filter-pill" data-filter="institutes">
+            <span class="pill-dot dot-ophthalmology"></span> Institutos de Oftalmología
+          </button>
+          <button type="button" class="filter-pill" data-filter="clinics">
+            <span class="pill-dot dot-clinic"></span> Clínicas de Ojos
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barra de Radio de Búsqueda y Herramientas justo arriba del mapa -->
+    <div class="radius-prominent-bar">
+      <div class="radius-prominent-left">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 12l5-5"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
+        <span class="radius-prominent-title">Radio de Cobertura:</span>
+        <select id="radiusSelect" class="radius-select-prominent">
+          <option value="10000">10 km (Muy cercano)</option>
+          <option value="25000">25 km (Local)</option>
+          <option value="50000" selected>50 km (Área Metropolitana)</option>
+          <option value="100000">100 km (Regional)</option>
+          <option value="200000">200 km (Departamental / Estatal)</option>
+          <option value="300000">300 km (Amplio)</option>
+          <option value="500000">500 km (Nacional / Todo el país)</option>
+        </select>
+      </div>
+      
+      <div class="radius-prominent-right">
+        <!-- Botón de bloqueo/desbloqueo de zoom con rueda fuera del viewport del mapa -->
+        <button type="button" id="btnToggleScrollZoom" class="btn-scroll-toggle" title="Haz clic para bloquear o activar el zoom con la rueda del ratón y evitar que la página se mueva">
+          <svg class="scroll-lock-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+          <span id="scrollLockLabel">Rueda de ratón: Zoom Activo</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Layout principal del Mapa y Lista lateral -->
+    <div class="map-layout-grid">
+      <!-- Contenedor del Mapa -->
+      <div class="map-wrapper">
+        <!-- Tip flotante del mapa centrado limpiamente -->
+        <div class="map-floating-tip" id="mapFloatingTip">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <span>Haz clic en el mapa o arrastra el marcador 📍 para cambiar tu ubicación</span>
+        </div>
+
+        <div id="osmMap" class="osm-map-view"></div>
+        <div id="mapStatusOverlay" class="map-status-overlay is-hidden">
+          <div class="spinner-medical"></div>
+          <p id="mapStatusText">Buscando centros especializados en retinopatía en OpenStreetMap...</p>
+        </div>
+        
+        <!-- Leyenda del mapa -->
+        <div class="map-legend">
+          <div class="legend-item"><span class="legend-badge badge-user"></span> Tu ubicación</div>
+          <div class="legend-item"><span class="legend-badge badge-retina"></span> Especialidad en Retina</div>
+          <div class="legend-item"><span class="legend-badge badge-opht"></span> Instituto / Hospital Oftalmológico</div>
+          <div class="legend-item"><span class="legend-badge badge-clin"></span> Clínica de Ojos</div>
+        </div>
+      </div>
+
+      <!-- Panel lateral de resultados -->
+      <aside class="places-sidebar">
+        <div class="places-sidebar-header">
+          <h2 class="places-title">Centros Oftalmológicos</h2>
+          <span class="places-count" id="placesCount">0 centros</span>
+        </div>
+        <p class="current-location-label" id="currentLocationLabel">Ubicación: No establecida (haz clic en 'Usar mi ubicación actual' o busca tu ciudad)</p>
+
+        <div class="places-list" id="placesList">
+          <div class="places-empty-state">
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            <h3>Descubre centros especializados en retina</h3>
+            <p>Presiona <strong>"Usar mi ubicación actual"</strong> o escribe tu ciudad en el buscador para explorar clínicas e institutos oftalmológicos con atención a retinopatía diabética.</p>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+  </div>
+</section>
+
+<!-- Guía de atención clínica para retinopatía diabética -->
+<section class="section">
+  <div class="shell">
+    <div class="section-title text-center">
+      <span class="eyebrow">Guía de Atención</span>
+      <h2>¿Dónde y cuándo acudir a revisión médica?</h2>
+      <p class="lead">La retinopatía diabética es una de las principales causas de pérdida visual prevenible. La detección temprana es crucial.</p>
+    </div>
+
+    <div class="grid-3 clinical-guidance-grid">
+      <div class="card card-bordered">
+        <div class="card-icon icon-teal">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+        <h3>Control Preventivo Anual</h3>
+        <p>Toda persona con diagnóstico de diabetes mellitus tipo 1 o tipo 2 debe someterse a un <strong>examen de fondo de ojo con dilatación pupilar</strong> al menos una vez al año, incluso si no experimenta síntomas visuales.</p>
+        <div class="guidance-tag">Clínica u Oftalmología General</div>
+      </div>
+
+      <div class="card card-bordered">
+        <div class="card-icon icon-amber">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <h3>Tratamiento Especializado de Retina</h3>
+        <p>En casos de retinopatía moderada, severa o edema macular, se requiere atención por un <strong>retinólogo</strong>. Los tratamientos incluyen fotocoagulación láser, terapia antiangiogénica (inyecciones anti-VEGF) o vitrectomía.</p>
+        <div class="guidance-tag">Unidad de Retina / Hospital Especializado</div>
+      </div>
+
+      <div class="card card-bordered">
+        <div class="card-icon icon-red">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
+        <h3>Urgencia Oftalmológica</h3>
+        <p>Acude de urgencia ante aparición súbita de <strong>"moscas volantes" masivas, destellos luminosos (fotopsias), sombras oscuras o pérdida abrupta de agudeza visual</strong> (signos de hemorragia vítrea o desprendimiento).</p>
+        <div class="guidance-tag guidance-urgent">Urgencias Hospitalarias</div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<!-- Leaflet JS para OpenStreetMap -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="{{ url_for('static', filename='js/map.js') }}"></script>
+{% endblock %}

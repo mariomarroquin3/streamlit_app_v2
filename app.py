@@ -89,6 +89,12 @@ def about_page():
     return render_template("about.html", active_page="acerca")
 
 
+@app.route("/lugares-de-ayuda")
+def help_centers_page():
+    return render_template("help_centers.html", active_page="lugares")
+
+
+
 # ============================================================
 # API
 # ============================================================
