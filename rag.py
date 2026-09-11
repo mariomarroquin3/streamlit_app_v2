@@ -129,7 +129,13 @@ def _try_llm_generation(user_message: str) -> str | None:
     payload = json.dumps(
         {
             "model": OPENROUTER_MODEL,
-            "max_tokens": 600,
+            # "openrouter/free" a veces enruta a un modelo de razonamiento
+            # (piensa en un campo "reasoning" antes de responder, gastando
+            # tokens de max_tokens en el proceso). Con un presupuesto bajo el
+            # modelo puede agotarlo pensando y devolver content=null. Se usa
+            # un máximo generoso para dejarle espacio de sobra al contenido
+            # final; sigue siendo gratuito.
+            "max_tokens": 1600,
             "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user_message},
@@ -152,11 +158,22 @@ def _try_llm_generation(user_message: str) -> str | None:
     )
 
     try:
-        with urllib.request.urlopen(request, timeout=20) as response:
+        with urllib.request.urlopen(request, timeout=30) as response:
             data = json.loads(response.read().decode("utf-8"))
-        text = data["choices"][0]["message"]["content"].strip()
+        content = data["choices"][0]["message"].get("content")
+        if not content:
+            # content vacío/null: típicamente el modelo (de razonamiento)
+            # agotó max_tokens pensando y nunca llegó a responder. Se cae al
+            # fallback por plantilla en vez de fallar.
+            logger.warning(
+                "OpenRouter devolvió contenido vacío (modelo: %s, finish_reason: %s)",
+                data.get("model"),
+                data.get("choices", [{}])[0].get("finish_reason"),
+            )
+            return None
+        text = content.strip()
         return text or None
-    except (urllib.error.URLError, KeyError, IndexError, ValueError, TimeoutError):
+    except (urllib.error.URLError, KeyError, IndexError, ValueError, TimeoutError, AttributeError, TypeError):
         logger.exception("Fallo al generar explicación con la API de OpenRouter")
         return None
 
