@@ -193,7 +193,12 @@ def api_explain():
         predicted_class = int(data["predicted_class"])
         confidence = float(data["confidence"])
         raw_probabilities = data["probabilities"]
-        is_uncertain = bool(data.get("is_uncertain", False))
+        is_uncertain = data.get("is_uncertain", False)
+        # bool(x) trata cualquier string no vacío como True (incluido el
+        # literal "false"), así que se exige que el valor ya sea un booleano
+        # real en vez de coaccionarlo.
+        if not isinstance(is_uncertain, bool):
+            raise ValueError("is_uncertain debe ser un booleano")
     except (KeyError, TypeError, ValueError):
         return jsonify({"error": "Faltan datos del resultado de clasificación o tienen un formato inválido."}), 400
 
@@ -256,7 +261,9 @@ def api_report_feedback():
     try:
         predicted_class = int(data["predicted_class"])
         confidence = float(data["confidence"])
-        is_uncertain = bool(data.get("is_uncertain", False))
+        is_uncertain = data.get("is_uncertain", False)
+        if not isinstance(is_uncertain, bool):
+            raise ValueError("is_uncertain debe ser un booleano")
     except (KeyError, TypeError, ValueError):
         return jsonify({"error": "Faltan datos del resultado de clasificación o tienen un formato inválido."}), 400
 
