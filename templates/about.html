@@ -106,6 +106,45 @@
 <section class="section">
   <div class="shell">
     <div class="section-head">
+      <span class="eyebrow">Más allá de la clasificación</span>
+      <h2>Herramientas de apoyo clínico</h2>
+      <p>Además de clasificar la imagen, la aplicación incorpora un conjunto de herramientas pensadas para acompañar el resultado con contexto y orientar a la persona usuaria hacia atención profesional.</p>
+    </div>
+    <div class="step-grid">
+      <div class="step-card">
+        <div class="step-number">01</div>
+        <b>Explicación en lenguaje natural (RAG)</b>
+        <p>Recupera contexto clínico de una base de conocimiento local y lo redacta con un modelo de lenguaje (OpenRouter, con una cadena de varios modelos gratuitos de respaldo); si no hay conexión o la API falla, usa una plantilla determinística construida con el mismo contexto — nunca deja a la persona sin explicación.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">02</div>
+        <b>Detección de incertidumbre</b>
+        <p>Cuando varias etapas de retinopatía compiten de forma muy cercana en la predicción, el sistema se abstiene deliberadamente de afirmar una clase concreta y recomienda evaluación por un profesional, en vez de mostrar el resultado top como si fuera confiable.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">03</div>
+        <b>Mapa de centros de atención</b>
+        <p>Directorio verificado de hospitales y clínicas con oftalmología en El Salvador y otros países de la región, geolocalización de la persona usuaria y cálculo del centro público más cercano, con opción de compartirlo por WhatsApp.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">04</div>
+        <b>Reporte de retroalimentación</b>
+        <p>Permite marcar una clasificación como incorrecta y dejar un comentario opcional, quedando registrado para revisión manual — insumo para una futura curaduría de casos difíciles.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">05</div>
+        <b>Reporte descargable en PDF</b>
+        <p>Exporta el resultado, la distribución de probabilidades y el mapa de calor Grad-CAM en un documento imprimible, listo para compartir con un profesional de salud.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section class="section">
+  <div class="shell">
+    <div class="section-head">
       <span class="eyebrow">Alcance</span>
       <h2>Limitaciones conocidas</h2>
     </div>

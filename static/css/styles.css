@@ -157,6 +157,7 @@ p { margin: 0 0 1em; color: var(--text-2); }
 .main-nav a {
   padding: 0.55rem 0.95rem; border-radius: 999px; font-weight: 600; font-size: 0.92rem;
   color: var(--text-2); transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
 }
 .main-nav a:hover { color: var(--text-1); background: var(--line-soft); }
 .main-nav a.is-active { color: var(--teal-deep); background: rgba(12, 140, 134, 0.14); }
@@ -180,7 +181,11 @@ p { margin: 0 0 1em; color: var(--text-2); }
 .mobile-nav a.is-active { color: var(--teal-deep); }
 .mobile-nav.is-open { display: flex; }
 
-@media (max-width: 900px) {
+@media (max-width: 1200px) {
+  /* Con los 5 enlaces + marca + acciones, el header necesita ~1156px para
+     no envolver texto (medido con white-space: nowrap); por debajo de eso
+     se usa el menú hamburguesa en vez de dejar que "Lugares de Ayuda" se
+     parta en varias líneas. */
   .main-nav { display: none; }
   .nav-burger { display: inline-flex; }
   .header-actions .btn-primary { display: none; }
@@ -231,8 +236,13 @@ p { margin: 0 0 1em; color: var(--text-2); }
 
 @media (max-width: 980px) {
   .hero-grid { grid-template-columns: 1fr; }
-  .retina-figure { order: -1; margin-bottom: 8px; }
-  .retina-figure svg { max-width: 280px; }
+  /* El orden natural del HTML ya pone el titular y el CTA antes que la
+     ilustración — no se fuerza order:-1 aquí, para que en mobile la persona
+     vea primero de qué trata la herramienta y el botón "Probar el
+     clasificador" en vez de tener que pasar la ilustración decorativa y
+     3 chips de métricas sin contexto antes de llegar a esos elementos. */
+  .retina-figure { margin-top: 24px; }
+  .retina-figure svg { max-width: 240px; }
 }
 
 /* =====================================================================
@@ -343,6 +353,14 @@ hr.divider { border: none; border-top: 1px solid var(--line); margin: 0; }
    CLASIFICADOR
    ===================================================================== */
 .classifier-layout { display: grid; grid-template-columns: 300px 1fr; gap: 32px; align-items: start; }
+@media (min-width: 1400px) {
+  /* En monitores anchos, dar más ancho a esta página (por encima del resto
+     del sitio, que se queda en --shell) para que las imágenes de
+     diagnóstico (original, preprocesada, mapa de calor, Grad-CAM) se vean
+     más grandes en vez de quedar limitadas por el mismo ancho que un
+     párrafo de texto. */
+  .classifier-layout { max-width: 1440px; }
+}
 .side-panel {
   background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius);
   padding: 22px; position: sticky; top: calc(var(--header-h) + 20px); box-shadow: var(--shadow-sm);
@@ -391,7 +409,15 @@ hr.divider { border: none; border-top: 1px solid var(--line); margin: 0; }
 @keyframes fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
 .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
-.image-frame { background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; box-shadow: var(--shadow-sm); }
+.image-frame {
+  background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 12px; box-shadow: var(--shadow-sm);
+  /* <figure> trae por defecto del navegador margin: 1em 40px — sin
+     resetearlo, cada tarjeta perdía 80px de ancho horizontal dentro de su
+     columna de grid (bastante en el grid de 3 columnas de Grad-CAM, donde
+     cada columna mide ~195px). */
+  margin: 0;
+}
 .image-frame img { border-radius: calc(var(--radius) - 8px); width: 100%; }
 .image-frame figcaption { text-align: center; font-size: 0.8rem; color: var(--text-3); margin-top: 8px; font-family: var(--font-mono); }
 
@@ -400,9 +426,17 @@ hr.divider { border: none; border-top: 1px solid var(--line); margin: 0; }
 .result-badge { display: inline-flex; align-items: center; gap: 10px; color: #fff; font-weight: 700; padding: 10px 18px; border-radius: 999px; font-size: 1.02rem; margin-bottom: 14px; }
 .result-badge .sev-dot { width: 9px; height: 9px; border-radius: 50%; background: #fff; }
 .result-card .result-desc { color: var(--text-2); font-size: 0.95rem; }
-.confidence-line { display: flex; align-items: baseline; gap: 8px; margin: 14px 0 22px; }
+.confidence-line { display: flex; align-items: baseline; gap: 8px; margin: 14px 0 22px; flex-wrap: wrap; }
 .confidence-line .value { font-family: var(--font-mono); font-size: 1.6rem; font-weight: 600; }
 .confidence-line .label { font-size: 0.85rem; color: var(--text-3); }
+.confidence-tag {
+  font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 999px;
+  text-transform: uppercase; letter-spacing: 0.03em;
+}
+.confidence-tag.conf-high { background: rgba(16, 185, 129, 0.14); color: #0d9668; }
+.confidence-tag.conf-moderate { background: rgba(201, 138, 44, 0.14); color: var(--amber); }
+.confidence-tag.conf-low { background: rgba(239, 68, 68, 0.12); color: var(--sev-3); }
+[data-theme="dark"] .confidence-tag.conf-high { color: #34d399; }
 
 .prob-list { display: flex; flex-direction: column; gap: 12px; }
 .prob-row { display: grid; grid-template-columns: 132px 1fr 52px; align-items: center; gap: 10px; }
@@ -501,7 +535,13 @@ hr.divider { border: none; border-top: 1px solid var(--line); margin: 0; }
 
 @media (max-width: 980px) {
   .classifier-layout { grid-template-columns: 1fr; }
-  .side-panel { position: static; }
+  /* En el HTML el panel "Sobre el modelo" va antes que la zona de subida
+     (para que el grid de escritorio lo muestre como columna izquierda),
+     pero en mobile eso obligaba a pasar 2 pantallas de datos del modelo
+     antes de llegar al dropzone, que es la acción principal de la página.
+     Se reordena visualmente sin tocar el HTML. */
+  .side-panel { position: static; order: 2; }
+  .classifier-main { order: 1; }
   .result-grid { grid-template-columns: 1fr; }
   .gradcam-grid { grid-template-columns: 1fr; }
 }
@@ -658,18 +698,24 @@ hr.divider { border: none; border-top: 1px solid var(--line); margin: 0; }
   background: rgba(10, 26, 43, 0.9);
   color: #fff;
   padding: 7px 16px;
-  border-radius: 999px;
+  border-radius: 16px;
   font-size: 0.8rem;
   font-weight: 600;
   display: flex;
   align-items: center;
+  text-align: center;
   gap: 8px;
   backdrop-filter: blur(8px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   pointer-events: none;
-  white-space: nowrap;
   max-width: 90%;
   border: 1px solid rgba(255, 255, 255, 0.2);
+}
+@media (max-width: 520px) {
+  /* El mensaje completo no cabe en una sola línea en pantallas angostas
+     (medido: se desbordaba fuera del mapa con white-space: nowrap). Se
+     permite envolver a 2 líneas en vez de recortarse. */
+  .map-floating-tip { font-size: 0.74rem; padding: 8px 14px; }
 }
 
 .search-input-group {
@@ -879,6 +925,7 @@ hr.divider { border: none; border-top: 1px solid var(--line); margin: 0; }
 .map-wrapper {
   position: relative;
   height: 600px;
+  min-width: 0;
   border-radius: var(--radius);
   overflow: hidden;
   border: 1px solid var(--line);
@@ -968,6 +1015,7 @@ hr.divider { border: none; border-top: 1px solid var(--line); margin: 0; }
   border-radius: var(--radius);
   padding: 20px;
   height: 600px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow-sm);
