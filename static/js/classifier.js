@@ -23,6 +23,7 @@
   const resultBadgeText = document.getElementById("resultBadgeText");
   const resultDesc = document.getElementById("resultDesc");
   const confidenceValue = document.getElementById("confidenceValue");
+  const confidenceTag = document.getElementById("confidenceTag");
   const probList = document.getElementById("probList");
   const processedImg = document.getElementById("processedImg");
   const heatmapImg = document.getElementById("heatmapImg");
@@ -51,6 +52,18 @@
   let lastClassificationResult = null;
 
   if (!dropzone) return; // esta página no está activa
+
+  // Etiqueta cualitativa de confianza: un número crudo como "43.8%" no deja
+  // claro por sí solo si es una predicción confiable o no — el banner de
+  // incertidumbre solo se activa cuando varias clases compiten muy de
+  // cerca, así que un resultado "no técnicamente incierto" pero con
+  // confianza baja (p. ej. 43.8%) podía leerse como más confiable de lo
+  // que realmente es.
+  function confidenceTagInfo(confidence) {
+    if (confidence >= 0.7) return { text: "Confianza alta", cls: "conf-high" };
+    if (confidence >= 0.45) return { text: "Confianza moderada", cls: "conf-moderate" };
+    return { text: "Confianza baja", cls: "conf-low" };
+  }
 
   function formatBytes(bytes) {
     if (bytes < 1024) return bytes + " B";
@@ -128,6 +141,11 @@
     resultBadgeText.textContent = "Clase " + data.predicted_class + " — " + data.class_name;
     resultDesc.textContent = data.description;
     confidenceValue.textContent = (data.confidence * 100).toFixed(1) + "%";
+    if (confidenceTag) {
+      const tagInfo = confidenceTagInfo(data.confidence);
+      confidenceTag.textContent = tagInfo.text;
+      confidenceTag.className = "confidence-tag " + tagInfo.cls;
+    }
 
     if (data.is_uncertain) {
       uncertaintyBannerText.textContent = data.uncertainty_message || "Se recomienda visitar a un profesional.";

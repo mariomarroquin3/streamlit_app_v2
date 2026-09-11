@@ -28,6 +28,12 @@ from PIL import Image
 BASE_DIR = Path(__file__).parent
 MODEL_PATH = BASE_DIR / "model" / "best_model_v2.pth"
 IMG_SIZE = 300
+# Tamaño de las imágenes de diagnóstico (preprocesada, mapa de calor,
+# Grad-CAM superpuesto) que se devuelven para mostrarlas en la interfaz.
+# Es solo para presentación — el modelo siempre recibe la imagen a IMG_SIZE
+# (300×300) vía eval_transform, sin importar este valor. Se usa LANCZOS al
+# redimensionar para que ampliar no se vea borroso/pixelado.
+DISPLAY_IMG_SIZE = 600
 MODEL_NAME = "efficientnet_b3"
 NUM_CLASSES = 5
 
@@ -295,7 +301,7 @@ def run_inference_with_gradcam(model, device, image_pil: Image.Image) -> dict[st
     cam = GradCAM(model, target_layer)
     heatmap, predicted_class, probs = cam.generate(input_tensor)
 
-    display_image = processed_image.resize((IMG_SIZE, IMG_SIZE))
+    display_image = processed_image.resize((DISPLAY_IMG_SIZE, DISPLAY_IMG_SIZE), Image.LANCZOS)
     overlay_img, heatmap_img = overlay_heatmap(heatmap, display_image)
 
     return {

@@ -47,7 +47,7 @@
       </ol>
     </aside>
 
-    <div>
+    <div class="classifier-main">
       <form id="uploadForm">
         <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Subir imagen de fondo de ojo">
           <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><polyline points="7 9 12 4 17 9"/><line x1="12" y1="4" x2="12" y2="16"/></svg>
@@ -108,6 +108,7 @@
             <div class="confidence-line">
               <span class="value" id="confidenceValue"></span>
               <span class="label">nivel de confianza</span>
+              <span class="confidence-tag" id="confidenceTag"></span>
             </div>
             <b style="font-size:0.9rem;">Distribución de probabilidades por clase</b>
             <div class="prob-list" id="probList" style="margin-top:12px;"></div>
