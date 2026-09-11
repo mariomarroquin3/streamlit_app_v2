@@ -1177,6 +1177,21 @@ hr.divider { border: none; border-top: 1px solid var(--line); margin: 0; }
   color: #a78bfa;
 }
 
+.place-unverified-note {
+  font-size: 0.74rem;
+  color: #92400e;
+  background: rgba(201, 138, 44, 0.12);
+  border-left: 2px solid var(--amber);
+  padding: 5px 8px;
+  border-radius: 4px;
+  margin: 0 0 10px;
+  line-height: 1.4;
+}
+[data-theme="dark"] .place-unverified-note {
+  color: var(--amber-soft);
+  background: rgba(201, 138, 44, 0.15);
+}
+
 .place-contact-line {
   display: flex;
   align-items: center;
