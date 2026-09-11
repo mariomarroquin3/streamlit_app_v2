@@ -134,11 +134,18 @@ CHUNKS: list[dict] = [
 
 
 def retrieve(predicted_class: int, is_uncertain: bool) -> list[dict]:
-    """Recupera del corpus los fragmentos relevantes para esta predicción:
-    el fragmento específico de la clase, el de incertidumbre si aplica, y los
-    fragmentos generales (Grad-CAM, señales de alarma, límites de la herramienta)."""
-    wanted_tags = {f"class_{predicted_class}", "general"}
+    """Recupera del corpus los fragmentos relevantes para esta predicción: el
+    fragmento específico de la clase (solo si el resultado NO es incierto —
+    de lo contrario ese texto describiría con lenguaje seguro una etapa
+    concreta que el sistema decidió no afirmar, contradiciendo la
+    abstención), el de incertidumbre si aplica, y los fragmentos generales
+    (Grad-CAM, señales de alarma, límites de la herramienta). Simétrico con
+    _render_fallback() en rag.py, que ya excluía el fragmento de clase en la
+    plantilla determinística cuando is_uncertain=True."""
+    wanted_tags = {"general"}
     if is_uncertain:
         wanted_tags.add("uncertain")
+    else:
+        wanted_tags.add(f"class_{predicted_class}")
 
     return [chunk for chunk in CHUNKS if wanted_tags & set(chunk["tags"])]
