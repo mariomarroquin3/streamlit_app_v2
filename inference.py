@@ -64,6 +64,37 @@ DISCLAIMER = (
     "confirmado por un profesional de salud oftalmológica."
 )
 
+# ============================================================
+# DETECCIÓN DE INCERTIDUMBRE — el modelo se "abstiene" cuando varias clases
+# compiten de forma muy cercana por la predicción, en vez de mostrar una
+# clase top que en realidad no es confiable.
+# ============================================================
+UNCERTAINTY_CLOSE_MARGIN = 0.12  # una clase se considera "muy cercana" a la top si está a <=12 pts porcentuales
+UNCERTAINTY_MIN_CLOSE_CLASSES = 3  # 3 o más clases compitiendo de cerca -> incierto
+UNCERTAINTY_LOW_CONFIDENCE = 0.35  # confianza máxima por debajo de esto también es incierto
+
+UNCERTAINTY_MESSAGE = (
+    "Resultado incierto. El modelo no logró distinguir con confianza entre varias "
+    "etapas de retinopatía para esta imagen. Se recomienda visitar a un profesional "
+    "de salud oftalmológica para una evaluación certera."
+)
+
+
+def detect_uncertainty(probs: list[float]) -> dict[str, Any]:
+    """Determina si la predicción es ambigua (varias clases con probabilidad
+    similar a la máxima) y por lo tanto el sistema debe abstenerse de afirmar
+    una clase concreta."""
+    max_prob = max(probs)
+    close_classes = [i for i, p in enumerate(probs) if (max_prob - p) <= UNCERTAINTY_CLOSE_MARGIN]
+
+    is_uncertain = len(close_classes) >= UNCERTAINTY_MIN_CLOSE_CLASSES or max_prob < UNCERTAINTY_LOW_CONFIDENCE
+
+    return {
+        "is_uncertain": is_uncertain,
+        "close_classes": close_classes,
+        "message": UNCERTAINTY_MESSAGE if is_uncertain else None,
+    }
+
 eval_transform = T.Compose(
     [
         T.Resize((IMG_SIZE, IMG_SIZE)),
@@ -101,12 +132,20 @@ def apply_clahe(img_array: np.ndarray, clip_limit: float = 2.0, tile_grid_size=(
     return cv2.cvtColor(lab_eq, cv2.COLOR_LAB2RGB)
 
 
-def apply_circular_mask(img_array: np.ndarray) -> np.ndarray:
-    h, w = img_array.shape[:2]
+def _circular_mask_bool(h: int, w: int) -> np.ndarray:
+    """Máscara booleana (True = dentro del fondo de ojo) con la misma
+    geometría que apply_circular_mask, reutilizada para limpiar el heatmap
+    de Grad-CAM fuera del círculo retinal."""
     center = (w // 2, h // 2)
     radius = min(center[0], center[1])
     mask = np.zeros((h, w), dtype=np.uint8)
     cv2.circle(mask, center, radius, 255, -1)
+    return mask > 0
+
+
+def apply_circular_mask(img_array: np.ndarray) -> np.ndarray:
+    h, w = img_array.shape[:2]
+    mask = _circular_mask_bool(h, w).astype(np.uint8) * 255
     return cv2.bitwise_and(img_array, img_array, mask=mask)
 
 
@@ -224,9 +263,23 @@ class GradCAM:
 
 
 def overlay_heatmap(heatmap: np.ndarray, original_image_pil: Image.Image, alpha: float = 0.45):
-    heatmap_resized = cv2.resize(heatmap, (original_image_pil.width, original_image_pil.height))
+    h, w = original_image_pil.height, original_image_pil.width
+    heatmap_resized = cv2.resize(heatmap, (w, h))
+
+    # Fuera del círculo del fondo de ojo la imagen es fondo negro (ver
+    # apply_circular_mask): cualquier activación ahí es un artefacto de borde
+    # de las convoluciones (padding), no una señal clínica real. Se suprime
+    # esa zona y se renormaliza usando solo el máximo dentro del círculo,
+    # para que el heatmap resalte de verdad las lesiones y no las esquinas.
+    mask = _circular_mask_bool(h, w)
+    heatmap_resized = np.where(mask, heatmap_resized, 0.0)
+    inside_max = heatmap_resized[mask].max() if mask.any() else 0.0
+    if inside_max > 1e-8:
+        heatmap_resized = np.clip(heatmap_resized / inside_max, 0, 1)
+
     heatmap_colored = cv2.applyColorMap(np.uint8(255 * heatmap_resized), cv2.COLORMAP_JET)
     heatmap_colored = cv2.cvtColor(heatmap_colored, cv2.COLOR_BGR2RGB)
+    heatmap_colored[~mask] = 0  # negro fuera del fondo de ojo (en vez del azul base de JET)
 
     original_np = np.array(original_image_pil)
     overlay = (heatmap_colored * alpha + original_np * (1 - alpha)).astype(np.uint8)
@@ -271,6 +324,7 @@ def classify_image(image_pil: Image.Image) -> dict[str, Any]:
 
     predicted_class = int(result["predicted_class"])
     probs = [float(p) for p in result["probs"]]
+    uncertainty = detect_uncertainty(probs)
 
     return {
         "predicted_class": predicted_class,
@@ -287,6 +341,9 @@ def classify_image(image_pil: Image.Image) -> dict[str, Any]:
             }
             for i in range(NUM_CLASSES)
         ],
+        "is_uncertain": uncertainty["is_uncertain"],
+        "uncertainty_message": uncertainty["message"],
+        "close_classes": uncertainty["close_classes"],
         "processed_image": image_to_base64(result["processed_image"]),
         "heatmap_image": image_to_base64(result["heatmap_image"]),
         "overlay_image": image_to_base64(result["overlay_image"]),

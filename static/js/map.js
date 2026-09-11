@@ -286,14 +286,15 @@
       address: 'Zona 3, Quetzaltenango, Guatemala',
       phone: '+502 7761-4500'
     },
-    // El Salvador
+    // El Salvador — clínicas privadas de referencia en retina
     {
       name: 'Instituto de Ojos de El Salvador (INCLIO)',
       lat: 13.7055,
       lon: -89.2380,
       category: 'retina',
       isRetinaSpecialist: true,
-      categoryLabel: 'Alta Especialidad en Retina y Cirugía Ocular',
+      isPublic: false,
+      categoryLabel: 'Alta Especialidad en Retina y Cirugía Ocular (Privado)',
       services: [
         'Tratamiento de Retinopatía Diabética Proliferativa',
         'Láser para retina y terapia Anti-VEGF',
@@ -308,7 +309,8 @@
       lon: -89.2310,
       category: 'retina',
       isRetinaSpecialist: true,
-      categoryLabel: 'Centro Especializado en Retina y Vítreo',
+      isPublic: false,
+      categoryLabel: 'Centro Especializado en Retina y Vítreo (Privado)',
       services: [
         'Fondo de ojo y diagnóstico de retina',
         'Fotocoagulación láser'
@@ -316,19 +318,82 @@
       address: 'Alameda Manuel Enrique Araujo, San Salvador, El Salvador',
       phone: '+503 2245-1200'
     },
+    // El Salvador — red pública (MINSAL). Verificado contra fuentes oficiales
+    // (salud.gob.sv, transparencia.gob.sv) y geocodificado con Nominatim/OSM.
     {
-      name: 'Centro Oftalmológico Nacional FOSALUD',
-      lat: 13.7011,
-      lon: -89.2045,
-      category: 'institutes',
+      name: 'Centro Oftalmológico Nacional (Hospital Nacional "Dr. Juan José Fernández", Zacamil)',
+      lat: 13.7288574,
+      lon: -89.2075851,
+      category: 'public',
       isRetinaSpecialist: false,
-      categoryLabel: 'Hospital Oftalmológico de Atención Integral',
+      isPublic: true,
+      categoryLabel: 'Centro de Referencia Nacional en Oftalmología (Público — MINSAL)',
       services: [
-        'Tamizaje de retinopatía diabética',
-        'Consulta médica oftalmológica'
+        'Atención oftalmológica integral de la red pública',
+        'Parte del Plan Nacional de Salud Visual (MINSAL, inaugurado 2020)'
       ],
-      address: 'Calle Arce y 21 Av. Norte, San Salvador, El Salvador',
-      phone: '+503 2528-9700'
+      address: 'Colonia Zacamil, Mejicanos, San Salvador, El Salvador',
+      phone: null
+    },
+    {
+      name: 'Hospital Nacional Rosales',
+      lat: 13.7005746,
+      lon: -89.2067422,
+      category: 'public',
+      isRetinaSpecialist: false,
+      isPublic: true,
+      categoryLabel: 'Hospital Nacional de Referencia (Público — MINSAL)',
+      services: [
+        'Consulta de oftalmología general',
+        'Horario de oftalmología: lunes a domingo, 1:00 pm – 3:00 pm'
+      ],
+      address: 'Alameda Franklin D. Roosevelt, San Salvador, El Salvador',
+      phone: null
+    },
+    {
+      name: 'Hospital Nacional "San Rafael"',
+      lat: 13.6711599,
+      lon: -89.2783013,
+      category: 'public',
+      isRetinaSpecialist: false,
+      isPublic: true,
+      categoryLabel: 'Hospital Nacional Regional (Público — MINSAL)',
+      services: [
+        'Consulta y atención oftalmológica de urgencia',
+        'Hospital de referencia regional para La Libertad'
+      ],
+      address: 'Final 4a Calle Oriente y 15 Av. Sur, Santa Tecla, La Libertad',
+      phone: '+503 2594-4000'
+    },
+    {
+      name: 'Hospital Nacional Regional "San Juan de Dios" (Santa Ana)',
+      lat: 13.9918514,
+      lon: -89.5512539,
+      category: 'public',
+      isRetinaSpecialist: false,
+      isPublic: true,
+      categoryLabel: 'Hospital Nacional Regional (Público — MINSAL)',
+      services: [
+        'Consulta de oftalmología',
+        'Hospital de referencia para la zona occidental'
+      ],
+      address: 'Final 13 Av. Sur, Santa Ana, El Salvador',
+      phone: null
+    },
+    {
+      name: 'Hospital Nacional Regional "San Juan de Dios" (San Miguel)',
+      lat: 13.4741017,
+      lon: -88.1909591,
+      category: 'public',
+      isRetinaSpecialist: false,
+      isPublic: true,
+      categoryLabel: 'Hospital Nacional Regional (Público — MINSAL)',
+      services: [
+        'Consulta médica general con referencia a oftalmología',
+        'Hospital de referencia para la zona oriental'
+      ],
+      address: 'Final 11a Calle Poniente y 23 Av. Sur, Colonia Ciudad Jardín, San Miguel',
+      phone: null
     },
     // Honduras
     {
@@ -451,6 +516,7 @@
     placesList: document.getElementById('placesList'),
     placesCount: document.getElementById('placesCount'),
     currentLocationLabel: document.getElementById('currentLocationLabel'),
+    nearestPublicCallout: document.getElementById('nearestPublicCallout'),
     mapStatusOverlay: document.getElementById('mapStatusOverlay'),
     mapStatusText: document.getElementById('mapStatusText')
   };
@@ -475,6 +541,9 @@
     if (type === 'retina') {
       color = '#7c3aed'; // Violeta para Alta Especialidad en Retina
       iconSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4" fill="white"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>';
+    } else if (type === 'public') {
+      color = '#16a34a'; // Verde para Red Pública (MINSAL)
+      iconSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11Z"/><path d="M12 7v6M9 10h6"/></svg>';
     } else if (type === 'institutes') {
       color = '#0c8c86'; // Teal para Institutos
       iconSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3" fill="white"/></svg>';
@@ -538,6 +607,10 @@
   function renderInitialState() {
     if (dom.currentLocationLabel) {
       dom.currentLocationLabel.innerHTML = '<strong>📍 Ubicación:</strong> No establecida. Puedes fijar un punto en el mapa, seleccionar tu ciudad o escribir tu dirección.';
+    }
+    if (dom.nearestPublicCallout) {
+      dom.nearestPublicCallout.style.display = 'none';
+      dom.nearestPublicCallout.innerHTML = '';
     }
     if (dom.placesCount) {
       dom.placesCount.textContent = '0 centros';
@@ -947,12 +1020,15 @@
           distanceKm: dist,
           category: vc.category,
           isRetinaSpecialist: vc.isRetinaSpecialist,
+          isPublic: vc.isPublic || false,
           categoryLabel: vc.categoryLabel,
           services: vc.services,
           address: vc.address,
           phone: vc.phone || null,
           website: null,
-          openingHours: 'Lunes a Viernes (Previa Cita / Urgencias)',
+          openingHours: vc.isPublic
+            ? 'Hospital público — emergencias 24h, consulta de oftalmología según horario hospitalario'
+            : 'Lunes a Viernes (Previa Cita / Urgencias)',
           emergency: true,
           isVerified: true
         });
@@ -980,9 +1056,19 @@
 
       const key = nameLower.slice(0, 15);
       if (seen.has(key)) return;
-      seen.add(key);
 
       const distanceKm = haversineDistance(userLat, userLon, pLat, pLon);
+
+      // Deduplicar contra centros ya agregados (verificados u OSM) que estén
+      // a menos de 150 m: es muy probable que sea el mismo lugar físico con
+      // un nombre ligeramente distinto (comparar solo por texto no es
+      // suficiente, p. ej. "Hospital Nacional San Rafael" vs. con comillas).
+      const isSameLocationAsExisting = rawPlaces.some(
+        p => haversineDistance(p.lat, p.lon, pLat, pLon) < 0.15
+      );
+      if (isSameLocationAsExisting) return;
+
+      seen.add(key);
 
       const street = tags['addr:street'] || '';
       const housenumber = tags['addr:housenumber'] || '';
@@ -1003,6 +1089,7 @@
         distanceKm: distanceKm,
         category: classification.category,
         isRetinaSpecialist: classification.isRetinaSpecialist,
+        isPublic: classification.isPublic || false,
         categoryLabel: classification.categoryLabel,
         services: classification.services,
         address: address,
@@ -1024,6 +1111,39 @@
     placesData = rawPlaces;
     renderPlacesList();
     renderMarkers();
+    renderNearestPublicCallout();
+  }
+
+  // --- Callout: centro hospitalario PÚBLICO con oftalmología más cercano ---
+  function renderNearestPublicCallout() {
+    if (!dom.nearestPublicCallout) return;
+
+    const nearestPublic = placesData
+      .filter(p => p.isPublic)
+      .sort((a, b) => a.distanceKm - b.distanceKm)[0];
+
+    if (!nearestPublic) {
+      dom.nearestPublicCallout.style.display = 'none';
+      dom.nearestPublicCallout.innerHTML = '';
+      return;
+    }
+
+    const distStr = nearestPublic.distanceKm < 1
+      ? Math.round(nearestPublic.distanceKm * 1000) + ' m'
+      : nearestPublic.distanceKm.toFixed(1) + ' km';
+
+    dom.nearestPublicCallout.style.display = 'flex';
+    dom.nearestPublicCallout.innerHTML =
+      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11Z"/><path d="M12 7v6M9 10h6"/></svg>' +
+      '<div>' +
+      '<p class="callout-label">Centro público más cercano</p>' +
+      '<p class="callout-name">' + escapeHtml(nearestPublic.name) + '</p>' +
+      '<p class="callout-dist">A ' + distStr + ' de tu ubicación</p>' +
+      '</div>';
+
+    dom.nearestPublicCallout.onclick = function () {
+      focusPlaceOnMap(nearestPublic.lat, nearestPublic.lon);
+    };
   }
 
   // --- Clasificación estricta de elementos OSM ---
@@ -1062,7 +1182,30 @@
       };
     }
 
+    // Detectar operador público (red gubernamental / seguridad social) a partir
+    // de etiquetas de OSM, para distinguir hospitales públicos de clínicas privadas.
+    const publicKeywords = ['hospital nacional', 'minsal', 'ministerio de salud', 'isss', 'seguro social', 'fosalud'];
+    const operatorType = (tags['operator:type'] || '').toLowerCase();
+    const isPublicFacility =
+      publicKeywords.some(k => fullText.includes(k)) ||
+      operatorType === 'government' || operatorType === 'public';
+
     const isInstitute = fullText.includes('instituto') || fullText.includes('hospital') || fullText.includes('centro oftalmologico') || fullText.includes('centro oftalmológico');
+
+    if (isInstitute && isPublicFacility) {
+      return {
+        isValid: true,
+        category: 'public',
+        isRetinaSpecialist: false,
+        isPublic: true,
+        categoryLabel: 'Hospital / Centro Público de Oftalmología',
+        defaultName: 'Hospital Público con Oftalmología',
+        services: [
+          'Consulta oftalmológica pública',
+          'Detección y seguimiento de retinopatía diabética (según disponibilidad)'
+        ]
+      };
+    }
 
     if (isInstitute) {
       return {
@@ -1151,7 +1294,7 @@
         icon: createCustomIcon(place.category)
       });
 
-      const badgeClass = place.category === 'retina' ? 'badge-retina' : (place.category === 'institutes' ? 'badge-opht' : 'badge-clin');
+      const badgeClass = place.category === 'retina' ? 'badge-retina' : (place.category === 'public' ? 'badge-public' : (place.category === 'institutes' ? 'badge-opht' : 'badge-clin'));
       const gmapsUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + place.lat + ',' + place.lon;
       const osmRouteUrl = currentCoords ? ('https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route=' + currentCoords.lat + ',' + currentCoords.lon + '%3B' + place.lat + ',' + place.lon) : ('https://www.openstreetmap.org/?mlat=' + place.lat + '&mlon=' + place.lon + '#map=17/' + place.lat + '/' + place.lon);
 
@@ -1215,7 +1358,7 @@
 
     let html = '';
     filtered.forEach((place, idx) => {
-      const badgeStyle = place.category === 'retina' ? 'pill-retina' : (place.category === 'institutes' ? 'pill-opht' : 'pill-clin');
+      const badgeStyle = place.category === 'retina' ? 'pill-retina' : (place.category === 'public' ? 'pill-public' : (place.category === 'institutes' ? 'pill-opht' : 'pill-clin'));
       const distStr = place.distanceKm < 1 ? Math.round(place.distanceKm * 1000) + ' m' : place.distanceKm.toFixed(1) + ' km';
       const gmapsUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + place.lat + ',' + place.lon;
       const formattedHours = formatOpeningHoursSpanish(place.openingHours);
