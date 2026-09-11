@@ -201,8 +201,8 @@
     // Guatemala
     {
       name: 'Hospital de Ojos y Oídos Dr. Rodolfo Robles (Comité Pro Ciegos y Sordos)',
-      lat: 14.6062,
-      lon: -90.5511,
+      lat: 14.6072157,
+      lon: -90.5594895,
       category: 'retina',
       isRetinaSpecialist: true,
       categoryLabel: 'Hospital de Referencia en Retina',
@@ -216,92 +216,65 @@
       phone: '+502 2382-1700'
     },
     {
-      name: 'Clínica Visualiza - Centro de Cirugía Ocular y Retina',
-      lat: 14.5986,
-      lon: -90.5183,
+      name: 'Clínica Visualiza',
+      lat: 14.6018106,
+      lon: -90.5218143,
       category: 'retina',
       isRetinaSpecialist: true,
       categoryLabel: 'Alta Especialidad en Retina y Mácula',
       services: [
-        'Examen de fondo de ojo con dilatación',
-        'Tratamiento de Retinopatía Diabética y Edema Macular',
-        'Tomografía de Coherencia Óptica (OCT)'
+        'Centro Diabético — atención de retinopatía diabética',
+        'Servicio de Retina y Vítreo'
       ],
-      address: '5a Avenida 11-43 Zona 9, Ciudad de Guatemala',
-      phone: '+502 2420-9600'
+      address: '5a Avenida 11-44, Zona 9, Ciudad de Guatemala',
+      phone: '+502 2414-0800'
     },
     {
-      name: 'Centro Oftalmológico Integral (COI Guatemala)',
-      lat: 14.5950,
-      lon: -90.5080,
-      category: 'retina',
-      isRetinaSpecialist: true,
-      categoryLabel: 'Especialistas en Retina Médica y Quirúrgica',
-      services: [
-        'Diagnóstico y tratamiento de Retinopatía',
-        'Fotocoagulación láser y microcirugía ocular'
-      ],
-      address: '6a Avenida 3-22 Zona 10, Edificio Centro Médico II, Ciudad de Guatemala',
-      phone: '+502 2332-5501'
-    },
-    {
-      name: 'Instituto Panamericano de Ojos (IPO)',
-      lat: 14.5825,
-      lon: -90.5122,
+      name: 'Instituto Panamericano Contra la Ceguera (IPC)',
+      lat: 14.5892516,
+      lon: -90.5133003,
       category: 'institutes',
       isRetinaSpecialist: false,
       categoryLabel: 'Instituto de Oftalmología y Cirugía Ocular',
       services: [
-        'Consulta oftalmológica especializada',
-        'Evaluación preventiva de retina diabética'
+        'Consulta oftalmológica, óptica y cirugía de ojos',
+        'Trasplante de córnea y cirugía láser'
       ],
-      address: '10 Calle 2-45 Zona 14, Ciudad de Guatemala',
-      phone: '+502 2386-4700'
+      address: '10 Calle 3-01, Zona 14, Edificio Artes Médicas, Nivel 2, Ciudad de Guatemala',
+      phone: '+502 2337-2191'
     },
     {
-      name: 'Centro Visual G&G / Especialistas en Retina',
-      lat: 14.5921,
-      lon: -90.5110,
+      name: 'Centro Visual G&G',
+      lat: 14.5567814,
+      lon: -90.7337346,
       category: 'retina',
       isRetinaSpecialist: true,
-      categoryLabel: 'Clínica de Retina y Glaucoma',
+      categoryLabel: 'Clínica de Retina, Córnea y Oculoplástica (Antigua Guatemala)',
       services: [
-        'Fondo de ojo con lámpara de hendidura',
-        'Terapia antiangiogénica para retinopatía'
+        'Cirugía de Retina, Vítreo y Mácula',
+        'Angio-OCT y angiografía fluoresceínica'
       ],
-      address: '12 Calle 1-25 Zona 10, Edificio Géminis 10, Ciudad de Guatemala',
-      phone: '+502 2338-2020'
+      address: 'Calle de Los Duelos esq. Calle de las Beatas Indias, Centro Gerencial Marques de Rubio, Antigua Guatemala',
+      phone: '+502 4431-4822'
     },
+    // El Salvador — clínicas privadas. Verificado individualmente: se retiró
+    // una entrada previa ("Instituto de Ojos de El Salvador / INCLIO") que no
+    // se pudo corroborar como institución real con esa dirección/teléfono.
     {
-      name: 'Centro Oftalmológico de Occidente (Quetzaltenango)',
-      lat: 14.8340,
-      lon: -91.5180,
-      category: 'institutes',
+      name: 'Hospital de Ojos y Especialidades',
+      lat: 13.7099489,
+      lon: -89.2005944,
+      category: 'retina',
       isRetinaSpecialist: false,
-      categoryLabel: 'Clínica Oftalmológica Regional',
-      services: [
-        'Detección y control de retinopatía diabética',
-        'Examen de agudeza visual y fondo de ojo'
-      ],
-      address: 'Zona 3, Quetzaltenango, Guatemala',
-      phone: '+502 7761-4500'
-    },
-    // El Salvador — clínicas privadas de referencia en retina
-    {
-      name: 'Instituto de Ojos de El Salvador (INCLIO)',
-      lat: 13.7055,
-      lon: -89.2380,
-      category: 'retina',
-      isRetinaSpecialist: true,
       isPublic: false,
-      categoryLabel: 'Alta Especialidad en Retina y Cirugía Ocular (Privado)',
+      emergency: true,
+      categoryLabel: 'Hospital Privado de Oftalmología',
       services: [
-        'Tratamiento de Retinopatía Diabética Proliferativa',
-        'Láser para retina y terapia Anti-VEGF',
-        'Angiografía con Fluoresceína'
+        'Fundado por médicos especialistas en oftalmología',
+        'Consulta, cirugía y hospitalización oftalmológica; unidad de urgencias'
       ],
-      address: '85 Av. Norte y 3a Calle Poniente, Colonia Escalón, San Salvador',
-      phone: '+503 2263-4545'
+      address: 'Av. Max Bloch y Av. Emilio Álvarez, Colonia Médica, San Salvador',
+      phone: '+503 2225-0122'
     },
     {
       name: 'Clínica de Ojos Santa Lucía',
@@ -310,16 +283,24 @@
       category: 'retina',
       isRetinaSpecialist: true,
       isPublic: false,
-      categoryLabel: 'Centro Especializado en Retina y Vítreo (Privado)',
+      emergency: false,
+      categoryLabel: 'Clínica Privada con Subespecialidad en Retina y Vítreo',
       services: [
-        'Fondo de ojo y diagnóstico de retina',
-        'Fotocoagulación láser'
+        'Subespecialista en retina y vítreo en el equipo médico',
+        'Consulta y cirugía oftalmológica'
       ],
       address: 'Alameda Manuel Enrique Araujo, San Salvador, El Salvador',
       phone: '+503 2245-1200'
     },
-    // El Salvador — red pública (MINSAL). Verificado contra fuentes oficiales
-    // (salud.gob.sv, transparencia.gob.sv) y geocodificado con Nominatim/OSM.
+    // El Salvador — red pública (MINSAL). Verificado contra el "Diagnóstico
+    // Nacional de Salud Visual en El Salvador" (MINSAL, 2022, documento
+    // oficial con recurso humano y servicios por hospital) y los portafolios
+    // de servicios 2023 de cada hospital publicados en salud.gob.sv /
+    // transparencia.gob.sv. Coordenadas geocodificadas con Nominatim/OSM.
+    // Son los 10 hospitales de la red MINSAL con servicio de oftalmología;
+    // se omiten Hospital de la Mujer y Hospital San Vicente por tener
+    // infraestructura/recurso humano de oftalmología no confirmado o nulo
+    // según ese mismo diagnóstico.
     {
       name: 'Centro Oftalmológico Nacional (Hospital Nacional "Dr. Juan José Fernández", Zacamil)',
       lat: 13.7288574,
@@ -327,10 +308,12 @@
       category: 'public',
       isRetinaSpecialist: false,
       isPublic: true,
+      emergency: true,
       categoryLabel: 'Centro de Referencia Nacional en Oftalmología (Público — MINSAL)',
       services: [
-        'Atención oftalmológica integral de la red pública',
-        'Parte del Plan Nacional de Salud Visual (MINSAL, inaugurado 2020)'
+        '6 oftalmólogos y programa de residencia en oftalmología (MINSAL, 2022)',
+        'Subespecialidad en glaucoma (incl. tratamiento láser) y cirugía de cataratas',
+        'Tamizaje de retinopatía diabética'
       ],
       address: 'Colonia Zacamil, Mejicanos, San Salvador, El Salvador',
       phone: null
@@ -340,12 +323,14 @@
       lat: 13.7005746,
       lon: -89.2067422,
       category: 'public',
-      isRetinaSpecialist: false,
+      isRetinaSpecialist: true,
       isPublic: true,
+      emergency: true,
       categoryLabel: 'Hospital Nacional de Referencia (Público — MINSAL)',
       services: [
-        'Consulta de oftalmología general',
-        'Horario de oftalmología: lunes a domingo, 1:00 pm – 3:00 pm'
+        '12 oftalmólogos con subespecialidad en retina, glaucoma, estrabismo y segmento anterior',
+        'Único hospital público de la red MINSAL con cirugía de cataratas por facoemulsificación',
+        'Tamizaje de retinopatía diabética; horario de consulta de oftalmología: lunes a domingo, 1:00 pm – 3:00 pm'
       ],
       address: 'Alameda Franklin D. Roosevelt, San Salvador, El Salvador',
       phone: null
@@ -357,10 +342,11 @@
       category: 'public',
       isRetinaSpecialist: false,
       isPublic: true,
+      emergency: true,
       categoryLabel: 'Hospital Nacional Regional (Público — MINSAL)',
       services: [
-        'Consulta y atención oftalmológica de urgencia',
-        'Hospital de referencia regional para La Libertad'
+        'Consulta externa de oftalmología (Depto. de Cirugía): lunes a viernes, 7:00 am – 12:00 pm, con referencia',
+        'Tamizaje de retinopatía diabética y cirugía de cataratas'
       ],
       address: 'Final 4a Calle Oriente y 15 Av. Sur, Santa Tecla, La Libertad',
       phone: '+503 2594-4000'
@@ -372,10 +358,12 @@
       category: 'public',
       isRetinaSpecialist: false,
       isPublic: true,
+      emergency: true,
       categoryLabel: 'Hospital Nacional Regional (Público — MINSAL)',
       services: [
-        'Consulta de oftalmología',
-        'Hospital de referencia para la zona occidental'
+        '4 oftalmólogos, con subespecialidad oculoplástica',
+        'Cirugía de cataratas y programa de glaucoma con tratamiento láser',
+        'Tamizaje de retinopatía diabética'
       ],
       address: 'Final 13 Av. Sur, Santa Ana, El Salvador',
       phone: null
@@ -387,64 +375,73 @@
       category: 'public',
       isRetinaSpecialist: false,
       isPublic: true,
+      emergency: true,
       categoryLabel: 'Hospital Nacional Regional (Público — MINSAL)',
       services: [
-        'Consulta médica general con referencia a oftalmología',
-        'Hospital de referencia para la zona oriental'
+        '2 oftalmólogos: consulta y cirugía de cataratas',
+        'Tamizaje de retinopatía diabética'
       ],
       address: 'Final 11a Calle Poniente y 23 Av. Sur, Colonia Ciudad Jardín, San Miguel',
       phone: null
     },
-    // Honduras
     {
-      name: 'Instituto Hondureño de Oftalmología y Retina',
-      lat: 14.0880,
-      lon: -87.1850,
-      category: 'retina',
-      isRetinaSpecialist: true,
-      categoryLabel: 'Unidad Especializada en Retina',
-      services: [
-        'Fondo de ojo con dilatación',
-        'Fotocoagulación láser para retinopatía',
-        'Inyecciones Anti-VEGF'
-      ],
-      address: 'Colonia Palmira, Tegucigalpa, Honduras',
-      phone: '+504 2238-5000'
-    },
-    {
-      name: 'Centro de Ojos del Valle (San Pedro Sula)',
-      lat: 15.5120,
-      lon: -88.0310,
-      category: 'institutes',
+      name: 'Hospital Nacional de Sonsonate "Jorge Mazzini Villacorta"',
+      lat: 13.7228364,
+      lon: -89.7292366,
+      category: 'public',
       isRetinaSpecialist: false,
-      categoryLabel: 'Clínica de Cirugía Ocular y Retina',
+      isPublic: true,
+      emergency: true,
+      categoryLabel: 'Hospital Nacional Regional (Público — MINSAL)',
       services: [
-        'Diagnóstico y control de retinopatía diabética',
-        'Cirugía de cataratas y vítreo'
+        '2 oftalmólogos: consulta y cirugía de cataratas',
+        'Tamizaje de retinopatía diabética'
       ],
-      address: 'Barrio Guamilito, San Pedro Sula, Honduras',
-      phone: '+504 2550-3344'
+      address: '3a Calle Poniente, Barrio San Francisco, Sonsonate, El Salvador',
+      phone: null
     },
+    {
+      name: 'Hospital Nacional "San Pedro" (Usulután)',
+      lat: 13.3430316,
+      lon: -88.4497945,
+      category: 'public',
+      isRetinaSpecialist: false,
+      isPublic: true,
+      emergency: true,
+      categoryLabel: 'Hospital Nacional Regional (Público — MINSAL)',
+      services: [
+        '1 oftalmólogo: consulta y tamizaje de retinopatía diabética',
+        'Cirugía de cataratas'
+      ],
+      address: 'Carretera del Litoral, Colonia Usuluteca, Usulután, El Salvador',
+      phone: null
+    },
+    // Honduras — se retiraron dos entradas previas ("Instituto Hondureño de
+    // Oftalmología y Retina", "Centro de Ojos del Valle") que no se pudieron
+    // corroborar como instituciones reales. La búsqueda en vivo (OSM) sigue
+    // funcionando para Honduras aunque no haya directorio curado aquí.
+
     // Costa Rica
     {
-      name: 'Clínica 20/20 y Centro de Retina de Costa Rica',
-      lat: 9.9350,
-      lon: -84.0850,
+      name: 'Retina CR',
+      lat: 9.9355427,
+      lon: -84.0892405,
       category: 'retina',
       isRetinaSpecialist: true,
-      categoryLabel: 'Especialistas en Retina y Mácula',
+      categoryLabel: 'Clínica Especializada en Retina y Vítreo',
       services: [
-        'Tratamiento láser de retinopatía diabética',
-        'OCT macular y angiografía'
+        'Cirugía vitreorretiniana',
+        'Láser retinal',
+        'OCT y angiografía (fluoresceína e indocianina verde)'
       ],
-      address: 'Paseo Colón, San José, Costa Rica',
-      phone: '+506 2258-2020'
+      address: 'Torre Mercedes, Paseo Colón, San José, Costa Rica',
+      phone: '+506 2222-1115'
     },
     // México
     {
       name: 'Instituto de Oftalmología Fundación Conde de Valenciana',
-      lat: 19.4215,
-      lon: -99.1395,
+      lat: 19.4218220,
+      lon: -99.1409758,
       category: 'retina',
       isRetinaSpecialist: true,
       categoryLabel: 'Instituto Nacional de Alta Especialidad en Retina',
@@ -452,13 +449,13 @@
         'Clínica de Retina y Retinopatía Diabética',
         'Fotocoagulación láser, terapia Anti-VEGF y Vitrectomía'
       ],
-      address: 'Chimalpopoca 14, Centro, Cuauhtémoc, CDMX',
-      phone: '+52 55 5588-4600'
+      address: 'Chimalpopoca 14, Colonia Obrera, Cuauhtémoc, CDMX',
+      phone: '+52 55 5442-1700'
     },
     {
       name: 'Asociación para Evitar la Ceguera en México (APEC Hospital de la Ceguera)',
-      lat: 19.3448,
-      lon: -99.1415,
+      lat: 19.3421696,
+      lon: -99.1525839,
       category: 'retina',
       isRetinaSpecialist: true,
       categoryLabel: 'Hospital de Especialidades en Retina y Ceguera',
@@ -481,7 +478,7 @@
         'Cirugía vitreorretiniana de alta precisión'
       ],
       address: 'Av. Empresarios 150, Zapopan / Guadalajara, Jalisco',
-      phone: '+52 33 3848-2100'
+      phone: '+52 33 3848-4000'
     }
   ];
 
@@ -1028,15 +1025,15 @@
           website: null,
           openingHours: vc.isPublic
             ? 'Hospital público — emergencias 24h, consulta de oftalmología según horario hospitalario'
-            : 'Lunes a Viernes (Previa Cita / Urgencias)',
-          emergency: true,
+            : 'Consulta con horario propio (ver servicios) — llamar para confirmar',
+          emergency: vc.emergency || false,
           isVerified: true
         });
       }
     });
 
     // 2. Procesar y filtrar estrictamente elementos de OpenStreetMap
-    const excludeKeywords = ['dental', 'dentista', 'odontolog', 'estética', 'estetica', 'veterinaria', 'pediatría general', 'maternidad', 'ginecolog', 'psicolog', 'podolog', 'ortopedia', 'traumatologia', 'traumatología', 'cruz roja', 'cruz verde', 'dermatolog', 'spa'];
+    const excludeKeywords = ['dental', 'dentista', 'odontolog', 'estética', 'estetica', 'veterinaria', 'pediatría general', 'maternidad', 'ginecolog', 'psicolog', 'podolog', 'ortopedia', 'traumatologia', 'traumatología', 'cruz roja', 'cruz verde', 'dermatolog', 'spa', 'farmacia', 'pharmacy', 'botica', 'droguería', 'drogueria'];
 
     osmElements.forEach(el => {
       const pLat = el.lat || (el.center && el.center.lat);
@@ -1047,8 +1044,14 @@
       const name = tags.name || tags['name:es'] || tags['name:en'] || tags.operator || '';
       const nameLower = name.toLowerCase();
 
+      // Excluir farmacias explícitamente por su etiqueta OSM, sin depender
+      // del nombre: la consulta a Overpass incluye cualquier nodo con tag
+      // "healthcare" (sin filtrar valor), lo que trae farmacias
+      // (healthcare=pharmacy) que no ofrecen consulta ni cirugía oftalmológica.
+      if (tags['healthcare'] === 'pharmacy' || tags['amenity'] === 'pharmacy' || tags['shop'] === 'chemist') return;
+
       // Excluir rubros ajenos a salud ocular
-      if (excludeKeywords.some(k => nameLower.includes(k))) return;
+      if (excludeKeywords.some(k => containsKeyword(nameLower, k))) return;
 
       // Clasificar si pertenece a oftalmología o retina
       const classification = classifyOsmPlace(tags, name);
@@ -1146,17 +1149,37 @@
     };
   }
 
+  // --- Coincidencia de PALABRA/FRASE completa, no subcadena ---
+  // .includes() simple es peligroso para clasificar texto libre: "macula"
+  // (mácula, la estructura de la retina) aparece como subcadena dentro de
+  // "inmaculada" (p. ej. "Clínica Inmaculada Concepción"), lo que clasificaba
+  // consultorios familiares comunes como "Alta Especialidad en Retina".
+  // Se exige que no haya una letra pegada justo antes/después de la
+  // coincidencia.
+  function containsKeyword(text, keyword) {
+    const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp('(?<![a-zà-ÿ])' + escaped + '(?![a-zà-ÿ])', 'i');
+    return re.test(text);
+  }
+
   // --- Clasificación estricta de elementos OSM ---
   function classifyOsmPlace(tags, name) {
     const fullText = (name + ' ' + (tags['healthcare:speciality'] || '') + ' ' + (tags['speciality'] || '') + ' ' + (tags['description'] || '') + ' ' + (tags['healthcare'] || '') + ' ' + (tags['amenity'] || '')).toLowerCase();
 
-    // Palabras de retina y retinopatía
-    const retinaKeywords = ['retina', 'retinólog', 'retinolog', 'retinopat', 'mácula', 'macula', 'vítreo', 'vitreo', 'vitrectom', 'láser ocular', 'laser ocular', 'fotocoagulación', 'anti-vegf', 'ceguera', 'ciegos', 'valenciana', 'apec', 'robles', 'visualiza', 'inclio'];
-    const isRetina = retinaKeywords.some(k => fullText.includes(k));
+    // Palabras de retina y retinopatía. Deliberadamente NO se incluyen
+    // fragmentos de nombres propios de instituciones específicas (p. ej.
+    // "Robles", "Valenciana", "APEC") — esos nombres ya están cubiertos por
+    // sus coordenadas exactas en VERIFIED_RETINA_CENTERS, y usarlos aquí como
+    // palabra clave genérica produce falsos positivos graves: p. ej. una
+    // farmacia llamada "Los Robles" terminaba clasificada como "Alta
+    // Especialidad en Retina" con cirugía de vitrectomía inventada, solo
+    // porque coincidía con el apellido del Hospital Dr. Rodolfo Robles.
+    const retinaKeywords = ['retina', 'retinólog', 'retinolog', 'retinopat', 'mácula', 'macula', 'vítreo', 'vitreo', 'vitrectom', 'láser ocular', 'laser ocular', 'fotocoagulación', 'anti-vegf', 'ceguera', 'ciegos'];
+    const isRetina = retinaKeywords.some(k => containsKeyword(fullText, k));
 
     // Palabras generales de oftalmología
     const eyeKeywords = ['oftalmo', 'ojo', 'ojos', 'visión', 'vision', 'oculist', 'glaucoma', 'córnea', 'cornea', 'catarata', 'salauno', 'instituto de oftalmología', 'instituto de la visión', 'eye', 'ophthalmology', 'optometrist', 'optometría'];
-    const isEye = eyeKeywords.some(k => fullText.includes(k)) ||
+    const isEye = eyeKeywords.some(k => containsKeyword(fullText, k)) ||
       tags['healthcare:speciality'] === 'ophthalmology' ||
       tags['speciality'] === 'ophthalmology' ||
       tags['healthcare'] === 'ophthalmologist' ||
@@ -1187,10 +1210,10 @@
     const publicKeywords = ['hospital nacional', 'minsal', 'ministerio de salud', 'isss', 'seguro social', 'fosalud'];
     const operatorType = (tags['operator:type'] || '').toLowerCase();
     const isPublicFacility =
-      publicKeywords.some(k => fullText.includes(k)) ||
+      publicKeywords.some(k => containsKeyword(fullText, k)) ||
       operatorType === 'government' || operatorType === 'public';
 
-    const isInstitute = fullText.includes('instituto') || fullText.includes('hospital') || fullText.includes('centro oftalmologico') || fullText.includes('centro oftalmológico');
+    const isInstitute = ['instituto', 'hospital', 'centro oftalmologico', 'centro oftalmológico'].some(k => containsKeyword(fullText, k));
 
     if (isInstitute && isPublicFacility) {
       return {
@@ -1302,6 +1325,9 @@
       if (place.services && place.services.length > 0) {
         servicesListHtml = '<ul class="popup-services-list">' + place.services.slice(0, 2).map(s => '<li>✓ ' + escapeHtml(s) + '</li>').join('') + '</ul>';
       }
+      if (!place.isVerified) {
+        servicesListHtml += '<p class="place-unverified-note">⚠️ Datos de OSM sin verificar — confirma directamente.</p>';
+      }
 
       const formattedHours = formatOpeningHoursSpanish(place.openingHours);
 
@@ -1369,6 +1395,15 @@
           '<span class="services-title">🩺 Procedimientos para Retinopatía:</span>' +
           '<ul>' + place.services.map(s => '<li>' + escapeHtml(s) + '</li>').join('') + '</ul>' +
           '</div>';
+      }
+
+      // Los lugares detectados en vivo vía OpenStreetMap no pasan por
+      // verificación manual: el texto de servicios se infiere solo de sus
+      // etiquetas (nombre, tags), por lo que puede no reflejar la oferta
+      // real del lugar. Se advierte explícitamente en vez de presentarlo
+      // con la misma confianza que el directorio verificado.
+      if (!place.isVerified) {
+        servicesHtml += '<p class="place-unverified-note">⚠️ Datos de OpenStreetMap sin verificar — confirma servicios, horario y disponibilidad directamente con el lugar antes de acudir.</p>';
       }
 
       html +=
