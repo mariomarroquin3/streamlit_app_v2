@@ -17,6 +17,8 @@ import logging
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from PIL import Image, UnidentifiedImageError
 
 import inference
@@ -31,6 +33,20 @@ app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 MB por imagen subida
 
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png"}
+
+# Límite de tasa por IP — protege el cómputo de inferencia/Grad-CAM y las
+# llamadas a la API de OpenRouter contra abuso o denegación de servicio
+# (OWASP API4:2023 Unrestricted Resource Consumption / LLM04 Model DoS).
+# Almacenamiento en memoria: suficiente para un solo proceso de desarrollo o
+# demo; con varios workers (gunicorn -w >1) cada uno lleva su propio
+# contador, así que el límite real efectivo se multiplica por el número de
+# workers — para producción real conviene un backend compartido (Redis).
+limiter = Limiter(
+    key_func=get_remote_address,
+    app=app,
+    default_limits=["60 per minute"],
+    storage_uri="memory://",
+)
 
 
 def _allowed_file(filename: str) -> bool:
@@ -103,6 +119,7 @@ def help_centers_page():
 # API
 # ============================================================
 @app.route("/api/clasificar", methods=["POST"])
+@limiter.limit("15 per minute")
 def api_classify():
     if "file" not in request.files:
         return jsonify({"error": "No se recibió ningún archivo."}), 400
@@ -133,24 +150,58 @@ def api_classify():
 
 
 @app.route("/api/explicar", methods=["POST"])
+@limiter.limit("10 per minute")
 def api_explain():
     """Genera una explicación en lenguaje natural (RAG) del resultado que ya
-    devolvió /api/clasificar. Recibe de vuelta los mismos campos que esa
-    respuesta para no tener que mantener estado de la última clasificación
-    en el servidor."""
+    devolvió /api/clasificar. Recibe de vuelta los campos numéricos de esa
+    respuesta (para no mantener estado de la última clasificación en el
+    servidor), pero NUNCA usa texto libre enviado por el cliente dentro del
+    prompt del LLM: class_name y las etiquetas de cada probabilidad se
+    reconstruyen aquí a partir de inference.CLASS_NAMES usando solo los
+    índices numéricos. Esto cierra una vía de prompt injection (OWASP
+    LLM01): sin esta validación, alguien podría mandar cualquier texto en
+    "class_name" o en el nombre de una probabilidad y ese texto terminaría
+    incrustado tal cual en el mensaje que se le manda al modelo de lenguaje."""
     data = request.get_json(silent=True) or {}
 
     try:
         predicted_class = int(data["predicted_class"])
-        class_name = str(data["class_name"])
         confidence = float(data["confidence"])
-        probabilities = data["probabilities"]
+        raw_probabilities = data["probabilities"]
         is_uncertain = bool(data.get("is_uncertain", False))
     except (KeyError, TypeError, ValueError):
         return jsonify({"error": "Faltan datos del resultado de clasificación o tienen un formato inválido."}), 400
 
     if not (0 <= predicted_class < inference.NUM_CLASSES):
         return jsonify({"error": "Clase predicha fuera de rango."}), 400
+    if not (0.0 <= confidence <= 1.0):
+        return jsonify({"error": "Confianza fuera de rango."}), 400
+
+    if not isinstance(raw_probabilities, list) or len(raw_probabilities) != inference.NUM_CLASSES:
+        return jsonify({"error": "Formato de probabilidades inválido."}), 400
+
+    try:
+        seen_indices = set()
+        probabilities = []
+        for entry in raw_probabilities:
+            class_index = int(entry["class_index"])
+            value = float(entry["value"])
+            if not (0 <= class_index < inference.NUM_CLASSES) or not (0.0 <= value <= 1.0):
+                raise ValueError("class_index o value fuera de rango")
+            seen_indices.add(class_index)
+            probabilities.append(
+                {
+                    "class_index": class_index,
+                    "class_name": inference.CLASS_NAMES[class_index],
+                    "value": value,
+                }
+            )
+        if seen_indices != set(range(inference.NUM_CLASSES)):
+            raise ValueError("Faltan índices de clase o están repetidos")
+    except (KeyError, TypeError, ValueError):
+        return jsonify({"error": "Formato de probabilidades inválido."}), 400
+
+    class_name = inference.CLASS_NAMES[predicted_class]
 
     try:
         result = rag.generate_explanation(
