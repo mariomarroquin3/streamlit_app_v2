@@ -16,6 +16,9 @@ __pycache__/
 .env
 .env.local
 
+# Reportes de retroalimentación clínica (datos locales, no código fuente)
+feedback/
+
 # Memoria/notas de Claude Code para este proyecto (no es parte del código fuente)
 CLAUDE.md
 
