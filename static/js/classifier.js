@@ -29,6 +29,17 @@
   const overlayImg = document.getElementById("overlayImg");
   const downloadBtn = document.getElementById("downloadBtn");
 
+  const uncertaintyBanner = document.getElementById("uncertaintyBanner");
+  const uncertaintyBannerText = document.getElementById("uncertaintyBannerText");
+  const explainBtn = document.getElementById("explainBtn");
+  const explanationHint = document.getElementById("explanationHint");
+  const explanationLoading = document.getElementById("explanationLoading");
+  const explanationError = document.getElementById("explanationError");
+  const explanationText = document.getElementById("explanationText");
+  const explanationSource = document.getElementById("explanationSource");
+
+  let lastClassificationResult = null;
+
   if (!dropzone) return; // esta página no está activa
 
   function formatBytes(bytes) {
@@ -99,12 +110,29 @@
   }
 
   function renderResult(data) {
+    lastClassificationResult = data;
+
     originalImg.src = previewThumb.src;
 
     resultBadge.style.backgroundColor = data.color;
     resultBadgeText.textContent = "Clase " + data.predicted_class + " — " + data.class_name;
     resultDesc.textContent = data.description;
     confidenceValue.textContent = (data.confidence * 100).toFixed(1) + "%";
+
+    if (data.is_uncertain) {
+      uncertaintyBannerText.textContent = data.uncertainty_message || "Se recomienda visitar a un profesional.";
+      uncertaintyBanner.style.display = "flex";
+    } else {
+      uncertaintyBanner.style.display = "none";
+    }
+
+    // Reiniciar el panel de explicación para el nuevo resultado
+    explanationHint.style.display = "block";
+    explanationError.style.display = "none";
+    explanationText.style.display = "none";
+    explanationText.textContent = "";
+    explanationSource.style.display = "none";
+    explainBtn.disabled = false;
 
     probList.innerHTML = "";
     data.probabilities.forEach(function (p) {
@@ -128,6 +156,60 @@
 
     resultsWrap.classList.add("is-visible");
     resultsWrap.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  // --- Explicación del resultado vía RAG ---
+  function requestExplanation() {
+    if (!lastClassificationResult) return;
+
+    explainBtn.disabled = true;
+    explanationHint.style.display = "none";
+    explanationError.style.display = "none";
+    explanationText.style.display = "none";
+    explanationSource.style.display = "none";
+    explanationLoading.style.display = "flex";
+
+    fetch("/api/explicar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        predicted_class: lastClassificationResult.predicted_class,
+        class_name: lastClassificationResult.class_name,
+        confidence: lastClassificationResult.confidence,
+        probabilities: lastClassificationResult.probabilities,
+        is_uncertain: lastClassificationResult.is_uncertain,
+      }),
+    })
+      .then(function (response) {
+        return response.json().then(function (data) {
+          if (!response.ok) {
+            throw new Error(data.error || "No se pudo generar la explicación.");
+          }
+          return data;
+        });
+      })
+      .then(function (data) {
+        explanationText.textContent = data.explanation;
+        explanationText.style.display = "block";
+        explanationSource.textContent =
+          data.source === "llm"
+            ? "Explicación generada con IA (" + (data.model || "OpenRouter") + ") a partir de la guía clínica de la herramienta."
+            : "Explicación generada localmente a partir de la guía clínica de la herramienta.";
+        explanationSource.style.display = "block";
+      })
+      .catch(function (err) {
+        explanationError.textContent = err.message || "Ocurrió un error al generar la explicación.";
+        explanationError.style.display = "block";
+        explanationHint.style.display = "block";
+      })
+      .finally(function () {
+        explanationLoading.style.display = "none";
+        explainBtn.disabled = false;
+      });
+  }
+
+  if (explainBtn) {
+    explainBtn.addEventListener("click", requestExplanation);
   }
 
   // --- Interacciones de subida ---

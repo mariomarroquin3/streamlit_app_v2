@@ -15,10 +15,14 @@ from __future__ import annotations
 import io
 import logging
 
+from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
 from PIL import Image, UnidentifiedImageError
 
 import inference
+import rag
+
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("retinopathy-app")
@@ -124,6 +128,41 @@ def api_classify():
     except Exception:  # pragma: no cover - defensivo
         logger.exception("Fallo durante la inferencia")
         return jsonify({"error": "Ocurrió un error al analizar la imagen."}), 500
+
+    return jsonify(result)
+
+
+@app.route("/api/explicar", methods=["POST"])
+def api_explain():
+    """Genera una explicación en lenguaje natural (RAG) del resultado que ya
+    devolvió /api/clasificar. Recibe de vuelta los mismos campos que esa
+    respuesta para no tener que mantener estado de la última clasificación
+    en el servidor."""
+    data = request.get_json(silent=True) or {}
+
+    try:
+        predicted_class = int(data["predicted_class"])
+        class_name = str(data["class_name"])
+        confidence = float(data["confidence"])
+        probabilities = data["probabilities"]
+        is_uncertain = bool(data.get("is_uncertain", False))
+    except (KeyError, TypeError, ValueError):
+        return jsonify({"error": "Faltan datos del resultado de clasificación o tienen un formato inválido."}), 400
+
+    if not (0 <= predicted_class < inference.NUM_CLASSES):
+        return jsonify({"error": "Clase predicha fuera de rango."}), 400
+
+    try:
+        result = rag.generate_explanation(
+            predicted_class=predicted_class,
+            class_name=class_name,
+            confidence=confidence,
+            probabilities=probabilities,
+            is_uncertain=is_uncertain,
+        )
+    except Exception:  # pragma: no cover - defensivo
+        logger.exception("Fallo inesperado al generar la explicación")
+        return jsonify({"error": "Ocurrió un error al generar la explicación."}), 500
 
     return jsonify(result)
 

@@ -16,6 +16,9 @@ __pycache__/
 .env
 .env.local
 
+# Memoria/notas de Claude Code para este proyecto (no es parte del código fuente)
+CLAUDE.md
+
 # IDEs y editores
 .vscode/
 .idea/

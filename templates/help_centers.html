@@ -82,6 +82,9 @@
 
         <div class="filter-pills" id="categoryFilters">
           <button type="button" class="filter-pill is-active" data-filter="all">Todos los centros oftalmológicos</button>
+          <button type="button" class="filter-pill" data-filter="public">
+            <span class="pill-dot dot-public"></span> Centros Públicos (MINSAL)
+          </button>
           <button type="button" class="filter-pill" data-filter="retina">
             <span class="pill-dot dot-retina"></span> Especialistas en Retina
           </button>
@@ -139,6 +142,7 @@
         <!-- Leyenda del mapa -->
         <div class="map-legend">
           <div class="legend-item"><span class="legend-badge badge-user"></span> Tu ubicación</div>
+          <div class="legend-item"><span class="legend-badge badge-public"></span> Centro Público (MINSAL)</div>
           <div class="legend-item"><span class="legend-badge badge-retina"></span> Especialidad en Retina</div>
           <div class="legend-item"><span class="legend-badge badge-opht"></span> Instituto / Hospital Oftalmológico</div>
           <div class="legend-item"><span class="legend-badge badge-clin"></span> Clínica de Ojos</div>
@@ -151,6 +155,8 @@
           <h2 class="places-title">Centros Oftalmológicos</h2>
           <span class="places-count" id="placesCount">0 centros</span>
         </div>
+        <div class="nearest-public-callout" id="nearestPublicCallout" style="display:none;"></div>
+
         <p class="current-location-label" id="currentLocationLabel">Ubicación: No establecida (haz clic en 'Usar mi ubicación actual' o busca tu ciudad)</p>
 
         <div class="places-list" id="placesList">

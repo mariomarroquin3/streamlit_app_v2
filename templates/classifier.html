@@ -77,6 +77,15 @@
 
       <div class="results-wrap" id="resultsWrap">
         <hr class="divider" style="margin-bottom: 26px;">
+
+        <div class="uncertainty-banner" id="uncertaintyBanner" style="display:none;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div>
+            <strong>Resultado incierto.</strong>
+            <span id="uncertaintyBannerText">Se recomienda visitar a un profesional.</span>
+          </div>
+        </div>
+
         <div class="result-grid">
           <figure class="image-frame">
             <img id="originalImg" alt="Imagen original subida por el usuario">
@@ -97,6 +106,26 @@
             <b style="font-size:0.9rem;">Distribución de probabilidades por clase</b>
             <div class="prob-list" id="probList" style="margin-top:12px;"></div>
           </div>
+        </div>
+
+        <div class="explanation-section" id="explanationSection">
+          <div class="explanation-header">
+            <h2 style="font-size:1.35rem;">Explicación del resultado</h2>
+            <button type="button" class="btn btn-secondary btn-sm" id="explainBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4.2 3 5.4V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.6c1.8-1.2 3-3 3-5.4a7 7 0 0 0-7-7Z"/><line x1="9" y1="21" x2="15" y2="21"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
+              Explicar este resultado
+            </button>
+          </div>
+          <p class="explanation-hint" id="explanationHint">
+            Genera una explicación en lenguaje sencillo de lo que significa este resultado y qué se recomienda hacer.
+          </p>
+          <div class="explanation-loading" id="explanationLoading" style="display:none;">
+            <span class="spinner" aria-hidden="true"></span>
+            <span>Generando explicación…</span>
+          </div>
+          <div class="explanation-error" id="explanationError" style="display:none;"></div>
+          <div class="explanation-text" id="explanationText" style="display:none;"></div>
+          <p class="explanation-source" id="explanationSource" style="display:none;"></p>
         </div>
 
         <div class="gradcam-section">
