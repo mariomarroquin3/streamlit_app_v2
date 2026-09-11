@@ -9,9 +9,10 @@ RAG (Retrieval-Augmented Generation):
 2. Generación: esos fragmentos se pasan como contexto obligatorio a la API de
    OpenRouter (https://openrouter.ai), que redacta una explicación en español
    dirigida a la persona usuaria, cerrando siempre con la recomendación de
-   acudir a un profesional. Por defecto usa "openrouter/free", el router
-   gratuito de OpenRouter que selecciona automáticamente entre los modelos
-   sin costo disponibles (no requiere elegir un modelo específico ni pagar).
+   acudir a un profesional. Usa un modelo gratuito fijo (ver OPENROUTER_MODEL
+   más abajo) y, si ese responde con error (p. ej. 429 por cupo agotado del
+   pool gratuito), reintenta con un par de modelos gratuitos adicionales
+   (FALLBACK_MODELS) antes de rendirse.
 
 Si no hay `OPENROUTER_API_KEY` configurada, o la llamada a la API falla por
 cualquier motivo (sin conexión, key inválida, modelo no disponible, etc.),
@@ -33,8 +34,49 @@ import rag_knowledge
 
 logger = logging.getLogger("retinopathy-app.rag")
 
-OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "openrouter/free")
+# "openrouter/free" (el router automático) puede enrutar a modelos que no
+# sirven para esta tarea — p. ej. se observó en pruebas que aterrizaba en
+# "nvidia/nemotron-3.5-content-safety:free", un modelo de MODERACIÓN, no de
+# chat, que devolvía literalmente "User Safety: safe" en vez de una
+# explicación. Se fija un modelo instruction-tuned de propósito general
+# conocido en su lugar; sigue siendo gratuito. Si este modelo deja de estar
+# disponible (la lista de modelos free rota), overridear vía la variable de
+# entorno OPENROUTER_MODEL — ver .env.example.
+OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "google/gemma-4-26b-a4b-it:free")
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+
+# Cadena de respaldo: los modelos gratuitos de OpenRouter comparten un pool
+# con cupo limitado, así que en horas de mayor demanda es normal que el
+# modelo fijado responda 429 ("upstream_provider_shared_pool") aunque la
+# integración esté funcionando correctamente. En vez de caer directo a la
+# plantilla ante el primer 429, se intenta con un par de modelos gratuitos
+# adicionales (conocidos, instruction-tuned, no de razonamiento) antes de
+# rendirse. Si OPENROUTER_MODEL ya está en esta lista no se repite.
+FALLBACK_MODELS = [
+    m
+    for m in [
+        OPENROUTER_MODEL,
+        # Variante de la misma familia (Gemma) usada como default — buen
+        # primer respaldo por ser del mismo proveedor y tamaño similar.
+        "google/gemma-4-31b-it:free",
+        # Fine-tune de dominio salud; en pruebas devolvió una explicación
+        # clínica limpia y en español sin necesidad de instrucciones extra.
+        "inclusionai/ling-3.0-flash-sante:free",
+        # Modelo chat general pequeño; en pruebas respondió limpio y rápido.
+        "nex-agi/nex-n2.5-mini:free",
+    ]
+    if m
+]
+# Elimina duplicados preservando el orden (por si OPENROUTER_MODEL coincide
+# con uno de los respaldos fijos de arriba).
+FALLBACK_MODELS = list(dict.fromkeys(FALLBACK_MODELS))
+
+# Longitud mínima para aceptar una respuesta del LLM como explicación válida.
+# Sirve de red de seguridad adicional: si por cualquier motivo el modelo
+# devuelve algo que no es una explicación real (una etiqueta corta, un
+# veredicto de moderación, una negativa de una sola línea), se descarta y se
+# cae al fallback por plantilla en vez de mostrarle eso a la persona usuaria.
+MIN_VALID_EXPLANATION_LENGTH = 120
 
 SYSTEM_PROMPT = (
     "Eres un asistente de explicación clínica dentro de una herramienta académica "
@@ -135,7 +177,7 @@ def _render_fallback(
     return "\n\n".join(p for p in parts if p)
 
 
-def _try_llm_generation(user_message: str) -> str | None:
+def _try_llm_generation(user_message: str, model: str) -> str | None:
     api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
         logger.info("OPENROUTER_API_KEY no configurada; usando explicación por plantilla.")
@@ -143,7 +185,7 @@ def _try_llm_generation(user_message: str) -> str | None:
 
     payload = json.dumps(
         {
-            "model": OPENROUTER_MODEL,
+            "model": model,
             # "openrouter/free" a veces enruta a un modelo de razonamiento
             # (piensa en un campo "reasoning" antes de responder, gastando
             # tokens de max_tokens en el proceso). Con un presupuesto bajo el
@@ -187,9 +229,42 @@ def _try_llm_generation(user_message: str) -> str | None:
             )
             return None
         text = content.strip()
-        return text or None
+        if len(text) < MIN_VALID_EXPLANATION_LENGTH:
+            # Red de seguridad: si el modelo respondió con algo demasiado
+            # corto para ser una explicación real (p. ej. un veredicto de
+            # moderación como "User Safety: safe" si el enrutador cayó en un
+            # modelo equivocado), se descarta en vez de mostrárselo a la
+            # persona usuaria como si fuera la explicación.
+            logger.warning(
+                "OpenRouter devolvió una respuesta sospechosamente corta (modelo: %s): %r",
+                data.get("model"),
+                text,
+            )
+            return None
+        finish_reason = data.get("choices", [{}])[0].get("finish_reason")
+        if finish_reason == "length":
+            # El modelo agotó max_tokens a mitad de la explicación (típico si
+            # gastó buena parte del presupuesto "pensando" antes de escribir
+            # la respuesta visible). El texto pasa el chequeo de longitud
+            # mínima pero queda cortado a mitad de oración — mostrar eso a
+            # una persona buscando orientación médica es peor que mostrar el
+            # fallback por plantilla (que siempre está completo), así que se
+            # descarta igual que una respuesta vacía.
+            logger.warning(
+                "OpenRouter devolvió una respuesta truncada por max_tokens (modelo: %s): %r",
+                data.get("model"),
+                text,
+            )
+            return None
+        return text
+    except urllib.error.HTTPError as exc:
+        # 429 (cupo del pool gratuito agotado) es el caso más común y es
+        # exactamente el que justifica probar el siguiente modelo de la
+        # cadena de respaldo en vez de rendirse de inmediato.
+        logger.warning("OpenRouter respondió HTTP %s para el modelo %s", exc.code, model)
+        return None
     except (urllib.error.URLError, KeyError, IndexError, ValueError, TimeoutError, AttributeError, TypeError):
-        logger.exception("Fallo al generar explicación con la API de OpenRouter")
+        logger.exception("Fallo al generar explicación con la API de OpenRouter (modelo %s)", model)
         return None
 
 
@@ -208,15 +283,15 @@ def generate_explanation(
         predicted_class, class_name, confidence, probabilities, is_uncertain, chunks
     )
 
-    llm_text = _try_llm_generation(user_message)
-
-    if llm_text:
-        return {
-            "explanation": llm_text,
-            "source": "llm",
-            "model": OPENROUTER_MODEL,
-            "retrieved_sources": [c["id"] for c in chunks],
-        }
+    for model in FALLBACK_MODELS:
+        llm_text = _try_llm_generation(user_message, model)
+        if llm_text:
+            return {
+                "explanation": llm_text,
+                "source": "llm",
+                "model": model,
+                "retrieved_sources": [c["id"] for c in chunks],
+            }
 
     return {
         "explanation": _render_fallback(predicted_class, class_name, confidence, is_uncertain, chunks),

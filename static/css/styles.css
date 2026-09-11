@@ -408,7 +408,7 @@ hr.divider { border: none; border-top: 1px solid var(--line); margin: 0; }
 .prob-row { display: grid; grid-template-columns: 132px 1fr 52px; align-items: center; gap: 10px; }
 .prob-row .prob-name { font-size: 0.84rem; font-weight: 600; color: var(--text-2); }
 .prob-track { height: 8px; background: var(--line-soft); border-radius: 999px; overflow: hidden; }
-.prob-fill { height: 100%; border-radius: 999px; width: 0%; transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1); }
+.prob-fill { display: block; height: 100%; border-radius: 999px; width: 0%; transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1); }
 .prob-row .prob-pct { font-family: var(--font-mono); font-size: 0.82rem; text-align: right; color: var(--text-2); }
 
 .gradcam-section { margin-top: 40px; }
@@ -448,6 +448,56 @@ hr.divider { border: none; border-top: 1px solid var(--line); margin: 0; }
   font-size: 0.96rem; line-height: 1.65; color: var(--text-1); white-space: pre-line;
 }
 .explanation-source { font-size: 0.78rem; color: var(--text-3); margin-top: 8px; font-family: var(--font-mono); }
+
+/* =====================================================================
+   REPORTE DE RETROALIMENTACIÓN ("esta clasificación no parece correcta")
+   ===================================================================== */
+.feedback-block { margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--line); }
+.feedback-toggle {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: transparent; border: none; cursor: pointer;
+  font-size: 0.82rem; font-weight: 600; color: var(--text-3); padding: 0;
+  transition: color 0.15s ease;
+}
+.feedback-toggle:hover { color: var(--sev-3); }
+.feedback-form { margin-top: 12px; }
+.feedback-form p { font-size: 0.8rem; color: var(--text-3); margin-bottom: 8px; }
+.feedback-form textarea {
+  width: 100%; resize: vertical; font-family: inherit; font-size: 0.88rem;
+  padding: 10px 12px; border-radius: var(--radius-sm); border: 1.5px solid var(--line);
+  background: var(--paper); color: var(--text-1);
+}
+.feedback-form textarea:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px rgba(12, 140, 134, 0.15); }
+.feedback-form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+.feedback-status { font-size: 0.82rem; font-weight: 600; margin: 10px 0 0; }
+.feedback-status.is-success { color: var(--sev-0); }
+.feedback-status.is-error { color: var(--sev-3); }
+
+/* =====================================================================
+   REPORTE IMPRIMIBLE (PDF vía diálogo de impresión del navegador)
+   ===================================================================== */
+.print-report-header { display: none; }
+
+@media print {
+  .site-header, .site-footer, .page-header, .disclaimer-banner,
+  .side-panel, #uploadForm, .no-print, .skip-link { display: none !important; }
+
+  body { background: #fff; }
+  .shell { max-width: 100%; padding: 0; }
+  .classifier-layout { display: block; }
+  .results-wrap { display: block !important; margin-top: 0; }
+  .divider { display: none; }
+
+  .print-report-header { display: block; margin-bottom: 18px; }
+  .print-report-header h2 { font-size: 1.3rem; margin-bottom: 4px; }
+  .print-report-header p { font-size: 0.82rem; color: #333; margin: 0 0 4px; }
+  .print-report-header .print-disclaimer { font-size: 0.76rem; color: #555; border-top: 1px solid #ccc; padding-top: 6px; margin-top: 6px; }
+
+  .result-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
+  .image-frame, .result-card, .explanation-text { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+  .gradcam-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; break-inside: avoid; }
+  .gradcam-section, .explanation-section { break-inside: avoid; margin-top: 20px; }
+}
 
 @media (max-width: 980px) {
   .classifier-layout { grid-template-columns: 1fr; }
@@ -1382,6 +1432,30 @@ hr.divider { border: none; border-top: 1px solid var(--line); margin: 0; }
   padding: 4px 8px;
   border-radius: 5px;
 }
+
+.btn-popup-whatsapp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  background: #25d366;
+  color: #fff !important;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 5px;
+  transition: background 0.15s ease;
+}
+.btn-popup-whatsapp:hover { background: #1fb855; }
+
+.btn-whatsapp-share {
+  color: #128c46 !important;
+  border-color: rgba(37, 211, 102, 0.4) !important;
+}
+.btn-whatsapp-share:hover { border-color: #25d366 !important; color: #128c46 !important; background: rgba(37, 211, 102, 0.08); }
+[data-theme="dark"] .btn-whatsapp-share { color: #4ade80 !important; }
+[data-theme="dark"] .btn-whatsapp-share:hover { color: #4ade80 !important; }
 
 /* Toast flotante amigable para notificaciones */
 .map-app-toast {

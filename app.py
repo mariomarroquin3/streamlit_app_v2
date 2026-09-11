@@ -13,9 +13,26 @@ Grad-CAM) que la versión anterior.
 from __future__ import annotations
 
 import io
+import json
 import logging
+import uuid
+from datetime import datetime, timezone
+from pathlib import Path
 
 from dotenv import load_dotenv
+
+# Debe cargarse ANTES de importar rag: ese módulo lee OPENROUTER_MODEL de
+# os.environ como constante a nivel de módulo (en el momento del import), así
+# que si load_dotenv() se llama después, el valor de .env nunca se ve y
+# siempre se usa el default hardcodeado en rag.py.
+# override=True: el reloader de Werkzeug (debug=True) reinicia el proceso
+# hijo heredando el os.environ del proceso monitor, que ya pudo haber
+# cargado una versión vieja de .env en un arranque anterior. Sin
+# override=True, load_dotenv() no pisa una variable que ya exista en el
+# entorno, así que un cambio en .env nunca se reflejaría tras un reinicio
+# del reloader sin matar el proceso por completo.
+load_dotenv(override=True)
+
 from flask import Flask, jsonify, render_template, request
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -24,8 +41,6 @@ from PIL import Image, UnidentifiedImageError
 import inference
 import rag
 
-load_dotenv()
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("retinopathy-app")
 
@@ -33,6 +48,16 @@ app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 MB por imagen subida
 
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png"}
+
+# Almacén simple (JSON Lines) para reportes de "esta clasificación no parece
+# correcta". No es una base de datos de verdad: es material crudo para
+# revisión manual y, a futuro, para decidir si conviene reentrenar con casos
+# difíciles reales (ver nota de Kaggle en CLAUDE.md). No se guarda la imagen
+# (el cliente no la reenvía tras clasificar), solo los metadatos numéricos de
+# la predicción y un comentario opcional de la persona usuaria.
+FEEDBACK_DIR = Path(__file__).parent / "feedback"
+FEEDBACK_LOG = FEEDBACK_DIR / "reportes.jsonl"
+MAX_FEEDBACK_COMMENT_LENGTH = 500
 
 # Límite de tasa por IP — protege el cómputo de inferencia/Grad-CAM y las
 # llamadas a la API de OpenRouter contra abuso o denegación de servicio
@@ -216,6 +241,54 @@ def api_explain():
         return jsonify({"error": "Ocurrió un error al generar la explicación."}), 500
 
     return jsonify(result)
+
+
+@app.route("/api/reportar", methods=["POST"])
+@limiter.limit("5 per minute")
+def api_report_feedback():
+    """Registra un reporte de "esta clasificación no parece correcta" para
+    revisión manual posterior. No reconstruye ningún prompt ni se conecta al
+    LLM — es solo persistencia de datos, con la misma validación estricta de
+    índices/rangos que /api/explicar (nunca confía en class_name de texto
+    libre del cliente)."""
+    data = request.get_json(silent=True) or {}
+
+    try:
+        predicted_class = int(data["predicted_class"])
+        confidence = float(data["confidence"])
+        is_uncertain = bool(data.get("is_uncertain", False))
+    except (KeyError, TypeError, ValueError):
+        return jsonify({"error": "Faltan datos del resultado de clasificación o tienen un formato inválido."}), 400
+
+    if not (0 <= predicted_class < inference.NUM_CLASSES):
+        return jsonify({"error": "Clase predicha fuera de rango."}), 400
+    if not (0.0 <= confidence <= 1.0):
+        return jsonify({"error": "Confianza fuera de rango."}), 400
+
+    comment = data.get("comment", "")
+    if not isinstance(comment, str):
+        return jsonify({"error": "Formato de comentario inválido."}), 400
+    comment = comment.strip()[:MAX_FEEDBACK_COMMENT_LENGTH]
+
+    entry = {
+        "id": str(uuid.uuid4()),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "predicted_class": predicted_class,
+        "class_name": inference.CLASS_NAMES[predicted_class],
+        "confidence": confidence,
+        "is_uncertain": is_uncertain,
+        "comment": comment,
+    }
+
+    try:
+        FEEDBACK_DIR.mkdir(exist_ok=True)
+        with FEEDBACK_LOG.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except OSError:
+        logger.exception("No se pudo guardar el reporte de retroalimentación")
+        return jsonify({"error": "No se pudo guardar el reporte."}), 500
+
+    return jsonify({"status": "ok"})
 
 
 @app.route("/api/salud")

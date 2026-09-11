@@ -78,6 +78,12 @@
       <div class="results-wrap" id="resultsWrap">
         <hr class="divider" style="margin-bottom: 26px;">
 
+        <div class="print-report-header">
+          <h2>RetinoVision AI — Reporte de análisis</h2>
+          <p id="printReportDate"></p>
+          <p class="print-disclaimer">{{ disclaimer }}</p>
+        </div>
+
         <div class="uncertainty-banner" id="uncertaintyBanner" style="display:none;">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           <div>
@@ -105,13 +111,29 @@
             </div>
             <b style="font-size:0.9rem;">Distribución de probabilidades por clase</b>
             <div class="prob-list" id="probList" style="margin-top:12px;"></div>
+
+            <div class="feedback-block no-print">
+              <button type="button" class="feedback-toggle" id="reportIssueBtn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 17h.01"/></svg>
+                ¿Esta clasificación no te parece correcta?
+              </button>
+              <div class="feedback-form" id="reportForm" style="display:none;">
+                <p>Este reporte se guarda para revisión manual — no cambia el resultado mostrado ni sustituye una evaluación médica.</p>
+                <textarea id="reportComment" maxlength="500" rows="3" placeholder="Opcional: cuéntanos qué te parece incorrecto"></textarea>
+                <div class="feedback-form-actions">
+                  <button type="button" class="btn btn-ghost btn-sm" id="reportCancelBtn">Cancelar</button>
+                  <button type="button" class="btn btn-secondary btn-sm" id="reportSubmitBtn">Enviar reporte</button>
+                </div>
+                <p class="feedback-status" id="reportStatus" style="display:none;"></p>
+              </div>
+            </div>
           </div>
         </div>
 
         <div class="explanation-section" id="explanationSection">
           <div class="explanation-header">
             <h2 style="font-size:1.35rem;">Explicación del resultado</h2>
-            <button type="button" class="btn btn-secondary btn-sm" id="explainBtn">
+            <button type="button" class="btn btn-secondary btn-sm no-print" id="explainBtn">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4.2 3 5.4V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.6c1.8-1.2 3-3 3-5.4a7 7 0 0 0-7-7Z"/><line x1="9" y1="21" x2="15" y2="21"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
               Explicar este resultado
             </button>
@@ -151,7 +173,11 @@
           </div>
         </div>
 
-        <div class="download-row">
+        <div class="download-row no-print">
+          <button type="button" class="btn btn-ghost" id="printReportBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Descargar reporte (PDF)
+          </button>
           <a id="downloadBtn" class="btn btn-primary" download="gradcam_resultado.png">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Descargar imagen Grad-CAM

@@ -1349,6 +1349,7 @@
       popupHtml +=
         '<div class="popup-actions">' +
         '<a href="' + gmapsUrl + '" target="_blank" rel="noopener" class="btn-popup-nav">Cómo llegar (Google Maps)</a>' +
+        '<a href="' + buildWhatsAppShareUrl(place) + '" target="_blank" rel="noopener" class="btn-popup-whatsapp">' + WHATSAPP_ICON_SVG + ' Compartir por WhatsApp</a>' +
         '<a href="' + osmRouteUrl + '" target="_blank" rel="noopener" class="btn-popup-nav-osm">Ver en OpenStreetMap</a>' +
         '</div>' +
         '</div>';
@@ -1442,6 +1443,9 @@
         '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg> ' +
         'Ver en mapa' +
         '</button>' +
+        '<a href="' + buildWhatsAppShareUrl(place) + '" target="_blank" rel="noopener" class="btn-whatsapp-share btn btn-ghost btn-xs">' +
+        WHATSAPP_ICON_SVG + ' Compartir' +
+        '</a>' +
         '<a href="' + gmapsUrl + '" target="_blank" rel="noopener" class="btn-directions-link btn btn-primary btn-xs">' +
         '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg> ' +
         'Cómo llegar' +
@@ -1521,6 +1525,20 @@
       setTimeout(() => toast.remove(), 400);
     }, 4500);
   }
+
+  // --- Enlace para compartir un centro por WhatsApp (wa.me, sin número
+  // fijo: abre WhatsApp para que la persona elija a quién enviarlo) ---
+  function buildWhatsAppShareUrl(place) {
+    const gmapsUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + place.lat + ',' + place.lon;
+    const lines = ['🏥 ' + place.name, place.categoryLabel, place.address];
+    if (place.phone) lines.push('📞 ' + place.phone);
+    lines.push('📍 Cómo llegar: ' + gmapsUrl);
+    lines.push('');
+    lines.push('Encontrado con RetinoVision AI');
+    return 'https://wa.me/?text=' + encodeURIComponent(lines.filter(Boolean).join('\n'));
+  }
+
+  const WHATSAPP_ICON_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 6.32A8.86 8.86 0 0 0 3.16 16.7L2 21l4.42-1.14a8.87 8.87 0 0 0 4.24 1.08h.01a8.86 8.86 0 0 0 6.93-14.62Zm-6.93 13.6a7.36 7.36 0 0 1-3.76-1.03l-.27-.16-2.79.73.75-2.72-.18-.28a7.38 7.38 0 1 1 6.25 3.46Zm4.04-5.53c-.22-.11-1.31-.65-1.51-.72s-.35-.11-.5.11-.58.72-.71.87-.26.17-.48.06a6.05 6.05 0 0 1-1.78-1.1 6.67 6.67 0 0 1-1.23-1.53c-.13-.22 0-.34.1-.45s.22-.26.33-.39a1.5 1.5 0 0 0 .22-.37.4.4 0 0 0 0-.39c-.06-.11-.5-1.2-.68-1.65s-.36-.37-.5-.38h-.43a.82.82 0 0 0-.6.28 2.5 2.5 0 0 0-.78 1.86 4.34 4.34 0 0 0 .91 2.3 9.94 9.94 0 0 0 3.8 3.36c.53.23.94.36 1.26.47a3 3 0 0 0 1.4.09 2.29 2.29 0 0 0 1.5-1.06 1.87 1.87 0 0 0 .13-1.06c-.06-.1-.2-.15-.42-.26Z"/></svg>';
 
   function escapeHtml(str) {
     if (!str) return '';

@@ -29,6 +29,16 @@
   const overlayImg = document.getElementById("overlayImg");
   const downloadBtn = document.getElementById("downloadBtn");
 
+  const printReportBtn = document.getElementById("printReportBtn");
+  const printReportDate = document.getElementById("printReportDate");
+
+  const reportIssueBtn = document.getElementById("reportIssueBtn");
+  const reportForm = document.getElementById("reportForm");
+  const reportComment = document.getElementById("reportComment");
+  const reportCancelBtn = document.getElementById("reportCancelBtn");
+  const reportSubmitBtn = document.getElementById("reportSubmitBtn");
+  const reportStatus = document.getElementById("reportStatus");
+
   const uncertaintyBanner = document.getElementById("uncertaintyBanner");
   const uncertaintyBannerText = document.getElementById("uncertaintyBannerText");
   const explainBtn = document.getElementById("explainBtn");
@@ -134,6 +144,19 @@
     explanationSource.style.display = "none";
     explainBtn.disabled = false;
 
+    // Reiniciar el panel de reporte de retroalimentación
+    if (reportForm) {
+      reportForm.style.display = "none";
+      reportComment.value = "";
+      reportStatus.style.display = "none";
+      reportSubmitBtn.disabled = false;
+    }
+
+    if (printReportDate) {
+      printReportDate.textContent =
+        "Generado el " + new Date().toLocaleString("es-SV", { dateStyle: "long", timeStyle: "short" });
+    }
+
     probList.innerHTML = "";
     data.probabilities.forEach(function (p) {
       const row = document.createElement("div");
@@ -143,10 +166,13 @@
         '<span class="prob-track"><span class="prob-fill" style="background:' + p.color + '"></span></span>' +
         '<span class="prob-pct">' + (p.value * 100).toFixed(1) + "%</span>";
       probList.appendChild(row);
-      // pequeño retraso para que la transición de ancho sea visible
-      requestAnimationFrame(function () {
-        row.querySelector(".prob-fill").style.width = (p.value * 100).toFixed(1) + "%";
-      });
+
+      const fill = row.querySelector(".prob-fill");
+      // Forzar reflow antes de fijar el ancho final para que la transición de
+      // CSS se anime desde 0% (en vez de requestAnimationFrame, que algunos
+      // navegadores pausan si la pestaña no está visible/enfocada).
+      void fill.offsetWidth;
+      fill.style.width = (p.value * 100).toFixed(1) + "%";
     });
 
     processedImg.src = data.processed_image;
@@ -210,6 +236,61 @@
 
   if (explainBtn) {
     explainBtn.addEventListener("click", requestExplanation);
+  }
+
+  // --- Reporte de retroalimentación clínica ---
+  function submitFeedbackReport() {
+    if (!lastClassificationResult) return;
+
+    reportSubmitBtn.disabled = true;
+    reportStatus.style.display = "none";
+
+    fetch("/api/reportar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        predicted_class: lastClassificationResult.predicted_class,
+        confidence: lastClassificationResult.confidence,
+        is_uncertain: lastClassificationResult.is_uncertain,
+        comment: reportComment.value,
+      }),
+    })
+      .then(function (response) {
+        return response.json().then(function (data) {
+          if (!response.ok) {
+            throw new Error(data.error || "No se pudo enviar el reporte.");
+          }
+          return data;
+        });
+      })
+      .then(function () {
+        reportStatus.textContent = "Gracias, tu reporte quedó registrado para revisión.";
+        reportStatus.className = "feedback-status is-success";
+        reportStatus.style.display = "block";
+      })
+      .catch(function (err) {
+        reportStatus.textContent = err.message || "Ocurrió un error al enviar el reporte.";
+        reportStatus.className = "feedback-status is-error";
+        reportStatus.style.display = "block";
+        reportSubmitBtn.disabled = false;
+      });
+  }
+
+  if (reportIssueBtn) {
+    reportIssueBtn.addEventListener("click", function () {
+      reportForm.style.display = reportForm.style.display === "none" ? "block" : "none";
+    });
+    reportCancelBtn.addEventListener("click", function () {
+      reportForm.style.display = "none";
+    });
+    reportSubmitBtn.addEventListener("click", submitFeedbackReport);
+  }
+
+  // --- Reporte descargable en PDF (vía diálogo de impresión) ---
+  if (printReportBtn) {
+    printReportBtn.addEventListener("click", function () {
+      window.print();
+    });
   }
 
   // --- Interacciones de subida ---
