@@ -45,6 +45,15 @@
         <li>Máscara circular retinal</li>
         <li>Redimensión + normalización ImageNet</li>
       </ol>
+
+      <div class="history-panel" id="historyPanel" style="display:none;">
+        <div class="history-panel-header">
+          <h3>Tu historial</h3>
+          <button type="button" class="history-clear-btn" id="historyClearBtn">Borrar</button>
+        </div>
+        <p class="history-privacy-note">Se guarda solo en este navegador — nunca se envía a un servidor.</p>
+        <div class="history-list" id="historyList"></div>
+      </div>
     </aside>
 
     <div class="classifier-main">
@@ -79,8 +88,19 @@
         <hr class="divider" style="margin-bottom: 26px;">
 
         <div class="print-report-header">
-          <h2>RetinoVision AI — Reporte de análisis</h2>
-          <p id="printReportDate"></p>
+          <div class="print-header-top">
+            <div class="print-brand">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+              <div>
+                <div class="print-brand-name">RetinoVision AI</div>
+                <div class="print-brand-tag">Reporte de análisis de retinopatía diabética</div>
+              </div>
+            </div>
+            <div class="print-meta">
+              <div><span>Fecha</span><b id="printReportDate"></b></div>
+              <div><span>ID de reporte</span><b id="printReportId"></b></div>
+            </div>
+          </div>
           <p class="print-disclaimer">{{ disclaimer }}</p>
         </div>
 
@@ -110,6 +130,7 @@
               <span class="label">nivel de confianza</span>
               <span class="confidence-tag" id="confidenceTag"></span>
             </div>
+            <p class="history-trend" id="historyTrend" style="display:none;"></p>
             <b style="font-size:0.9rem;">Distribución de probabilidades por clase</b>
             <div class="prob-list" id="probList" style="margin-top:12px;"></div>
 
@@ -172,6 +193,10 @@
               <figcaption>3. Grad-CAM superpuesto</figcaption>
             </figure>
           </div>
+        </div>
+
+        <div class="print-report-footer">
+          <p>Generado con RetinoVision AI — herramienta académica/demostrativa (competencia EUREKA, categoría Ciencias de la Salud). No sustituye una evaluación oftalmológica profesional.</p>
         </div>
 
         <div class="download-row no-print">

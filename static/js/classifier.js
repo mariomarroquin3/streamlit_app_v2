@@ -32,6 +32,12 @@
 
   const printReportBtn = document.getElementById("printReportBtn");
   const printReportDate = document.getElementById("printReportDate");
+  const printReportId = document.getElementById("printReportId");
+
+  const historyPanel = document.getElementById("historyPanel");
+  const historyList = document.getElementById("historyList");
+  const historyClearBtn = document.getElementById("historyClearBtn");
+  const historyTrend = document.getElementById("historyTrend");
 
   const reportIssueBtn = document.getElementById("reportIssueBtn");
   const reportForm = document.getElementById("reportForm");
@@ -64,6 +70,134 @@
     if (confidence >= 0.45) return { text: "Confianza moderada", cls: "conf-moderate" };
     return { text: "Confianza baja", cls: "conf-low" };
   }
+
+  // --- Historial local de clasificaciones (localStorage, sin backend) ---
+  // Permite comparar el resultado actual contra visitas anteriores en el
+  // mismo navegador — útil para una enfermedad progresiva como la
+  // retinopatía diabética, donde lo relevante suele ser el cambio en el
+  // tiempo, no solo una foto aislada. No se envía a ningún servidor.
+  const HISTORY_KEY = "retinovision_history_v1";
+  const HISTORY_MAX_ENTRIES = 20;
+  const HISTORY_THUMB_SIZE = 72;
+
+  function loadHistory() {
+    try {
+      const raw = localStorage.getItem(HISTORY_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return []; // localStorage no disponible (modo privado, cuota, etc.) — la app sigue funcionando sin historial
+    }
+  }
+
+  function saveHistoryEntry(entry) {
+    try {
+      const history = loadHistory();
+      history.unshift(entry);
+      if (history.length > HISTORY_MAX_ENTRIES) history.length = HISTORY_MAX_ENTRIES;
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    } catch (e) {
+      // Cuota excedida o storage deshabilitado: se pierde el historial de esta clasificación, pero no rompe el flujo principal
+    }
+  }
+
+  function clearHistoryStorage() {
+    try {
+      localStorage.removeItem(HISTORY_KEY);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+
+  function makeThumbnail(imgEl, size) {
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      const s = Math.min(imgEl.naturalWidth, imgEl.naturalHeight);
+      const sx = (imgEl.naturalWidth - s) / 2;
+      const sy = (imgEl.naturalHeight - s) / 2;
+      ctx.drawImage(imgEl, sx, sy, s, s, 0, 0, size, size);
+      return canvas.toDataURL("image/jpeg", 0.55);
+    } catch (e) {
+      return null; // p. ej. imagen cross-origin que "mancha" el canvas — el historial se guarda sin miniatura
+    }
+  }
+
+  function formatHistoryDate(isoString) {
+    try {
+      return new Date(isoString).toLocaleDateString("es-SV", { day: "numeric", month: "short", year: "numeric" });
+    } catch (e) {
+      return "";
+    }
+  }
+
+  function renderHistoryPanel() {
+    if (!historyPanel || !historyList) return;
+    const history = loadHistory();
+
+    if (history.length === 0) {
+      historyPanel.style.display = "none";
+      return;
+    }
+
+    historyPanel.style.display = "block";
+    historyList.innerHTML = "";
+    history.forEach(function (entry) {
+      const item = document.createElement("div");
+      item.className = "history-item";
+      item.innerHTML =
+        (entry.thumbnail ? '<img src="' + entry.thumbnail + '" alt="">' : '<img alt="">') +
+        '<div class="history-item-info">' +
+        '<div class="history-item-class"><span class="history-dot" style="background:' + entry.color + '"></span>' +
+        "Clase " + entry.predicted_class + " — " + entry.class_name + "</div>" +
+        '<div class="history-item-meta">' + formatHistoryDate(entry.timestamp) + " · " + (entry.confidence * 100).toFixed(1) + "%</div>" +
+        "</div>";
+      historyList.appendChild(item);
+    });
+  }
+
+  // Compara el resultado nuevo contra la entrada más reciente ANTERIOR a
+  // él (no contra sí mismo). Si cualquiera de los dos resultados es
+  // incierto, no se afirma una tendencia — no es información confiable
+  // para comparar.
+  function renderHistoryTrend(newEntry, previousEntry) {
+    if (!historyTrend) return;
+    if (!previousEntry || newEntry.is_uncertain || previousEntry.is_uncertain) {
+      historyTrend.style.display = "none";
+      return;
+    }
+
+    let cls, text, icon;
+    if (newEntry.predicted_class < previousEntry.predicted_class) {
+      cls = "trend-down";
+      text = "Mejoró respecto a tu última clasificación (" + formatHistoryDate(previousEntry.timestamp) + ": Clase " + previousEntry.predicted_class + ")";
+      icon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>';
+    } else if (newEntry.predicted_class > previousEntry.predicted_class) {
+      cls = "trend-up";
+      text = "Empeoró respecto a tu última clasificación (" + formatHistoryDate(previousEntry.timestamp) + ": Clase " + previousEntry.predicted_class + ") — considera una revisión profesional";
+      icon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>';
+    } else {
+      cls = "trend-same";
+      text = "Se mantuvo igual que tu última clasificación (" + formatHistoryDate(previousEntry.timestamp) + ")";
+      icon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+    }
+
+    historyTrend.className = "history-trend " + cls;
+    historyTrend.innerHTML = icon + "<span>" + text + "</span>";
+    historyTrend.style.display = "flex";
+  }
+
+  if (historyClearBtn) {
+    historyClearBtn.addEventListener("click", function () {
+      if (!confirm("¿Borrar tu historial local de clasificaciones? Esta acción no se puede deshacer.")) return;
+      clearHistoryStorage();
+      renderHistoryPanel();
+      if (historyTrend) historyTrend.style.display = "none";
+    });
+  }
+
+  renderHistoryPanel(); // mostrar historial previo (si existe) al cargar la página
 
   function formatBytes(bytes) {
     if (bytes < 1024) return bytes + " B";
@@ -174,6 +308,9 @@
       printReportDate.textContent =
         "Generado el " + new Date().toLocaleString("es-SV", { dateStyle: "long", timeStyle: "short" });
     }
+    if (printReportId) {
+      printReportId.textContent = "RV-" + Date.now().toString(36).toUpperCase();
+    }
 
     probList.innerHTML = "";
     data.probabilities.forEach(function (p) {
@@ -200,6 +337,33 @@
 
     resultsWrap.classList.add("is-visible");
     resultsWrap.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    recordHistoryEntry(data);
+  }
+
+  function recordHistoryEntry(data) {
+    function save() {
+      const previousEntry = loadHistory()[0] || null;
+      const entry = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+        timestamp: new Date().toISOString(),
+        predicted_class: data.predicted_class,
+        class_name: data.class_name,
+        confidence: data.confidence,
+        is_uncertain: !!data.is_uncertain,
+        color: data.color,
+        thumbnail: makeThumbnail(originalImg, HISTORY_THUMB_SIZE),
+      };
+      saveHistoryEntry(entry);
+      renderHistoryPanel();
+      renderHistoryTrend(entry, previousEntry);
+    }
+
+    if (originalImg.complete && originalImg.naturalWidth > 0) {
+      save();
+    } else {
+      originalImg.addEventListener("load", save, { once: true });
+    }
   }
 
   // --- Explicación del resultado vía RAG ---
