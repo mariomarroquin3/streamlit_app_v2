@@ -358,8 +358,12 @@ hr.divider { border: none; border-top: 1px solid var(--line); margin: 0; }
      del sitio, que se queda en --shell) para que las imágenes de
      diagnóstico (original, preprocesada, mapa de calor, Grad-CAM) se vean
      más grandes en vez de quedar limitadas por el mismo ancho que un
-     párrafo de texto. */
-  .classifier-layout { max-width: 1440px; }
+     párrafo de texto. El selector compuesto .shell.classifier-layout (en
+     vez de .classifier-layout solo) le da más especificidad que la regla
+     de .shell, para que esta anulación no dependa de ir después en el
+     archivo — si alguien reordena el CSS más adelante, esta regla sigue
+     ganando igual. */
+  .shell.classifier-layout { max-width: 1440px; }
 }
 .side-panel {
   background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius);
@@ -508,13 +512,47 @@ hr.divider { border: none; border-top: 1px solid var(--line); margin: 0; }
 .feedback-status.is-error { color: var(--sev-3); }
 
 /* =====================================================================
+   HISTORIAL LOCAL (localStorage — nunca se envía a un servidor)
+   ===================================================================== */
+.history-panel { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+.history-panel-header { display: flex; justify-content: space-between; align-items: baseline; }
+.history-panel-header h3 { margin-bottom: 0; }
+.history-clear-btn {
+  background: none; border: none; color: var(--text-3); font-size: 0.76rem; font-weight: 600;
+  cursor: pointer; text-decoration: underline; text-underline-offset: 2px; padding: 0;
+}
+.history-clear-btn:hover { color: var(--sev-3); }
+.history-privacy-note { font-size: 0.72rem; color: var(--text-3); margin: 6px 0 12px; line-height: 1.4; }
+.history-list { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; padding-right: 4px; }
+.history-item { display: flex; align-items: center; gap: 10px; padding: 6px; border-radius: var(--radius-sm); transition: background 0.15s ease; }
+.history-item:hover { background: var(--line-soft); }
+.history-item img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 2px solid var(--line); }
+.history-item-info { flex: 1; min-width: 0; }
+.history-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; flex-shrink: 0; }
+.history-item-class { font-size: 0.8rem; font-weight: 700; color: var(--text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.history-item-meta { font-size: 0.72rem; color: var(--text-3); margin-top: 1px; }
+
+.history-trend {
+  display: flex; align-items: center; gap: 7px; font-size: 0.84rem; font-weight: 600;
+  padding: 9px 12px; border-radius: var(--radius-sm); margin: 4px 0 16px;
+}
+.history-trend svg { flex-shrink: 0; }
+.history-trend.trend-down { background: rgba(16, 185, 129, 0.1); color: #0d9668; }
+[data-theme="dark"] .history-trend.trend-down { color: #34d399; }
+.history-trend.trend-up { background: rgba(239, 68, 68, 0.1); color: var(--sev-3); }
+.history-trend.trend-same { background: var(--line-soft); color: var(--text-2); }
+
+/* =====================================================================
    REPORTE IMPRIMIBLE (PDF vía diálogo de impresión del navegador)
    ===================================================================== */
 .print-report-header { display: none; }
+.print-report-footer { display: none; }
 
 @media print {
+  @page { margin: 1.6cm 1.4cm; }
+
   .site-header, .site-footer, .page-header, .disclaimer-banner,
-  .side-panel, #uploadForm, .no-print, .skip-link { display: none !important; }
+  .side-panel, #uploadForm, .no-print, .skip-link, .explanation-hint { display: none !important; }
 
   body { background: #fff; }
   .shell { max-width: 100%; padding: 0; }
@@ -522,15 +560,29 @@ hr.divider { border: none; border-top: 1px solid var(--line); margin: 0; }
   .results-wrap { display: block !important; margin-top: 0; }
   .divider { display: none; }
 
-  .print-report-header { display: block; margin-bottom: 18px; }
-  .print-report-header h2 { font-size: 1.3rem; margin-bottom: 4px; }
-  .print-report-header p { font-size: 0.82rem; color: #333; margin: 0 0 4px; }
-  .print-report-header .print-disclaimer { font-size: 0.76rem; color: #555; border-top: 1px solid #ccc; padding-top: 6px; margin-top: 6px; }
+  .print-report-header { display: block; margin-bottom: 24px; padding-bottom: 14px; border-bottom: 2px solid #0c8c86; }
+  .print-header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+  .print-brand { display: flex; align-items: center; gap: 10px; }
+  .print-brand svg { color: #0c8c86; flex-shrink: 0; }
+  .print-brand-name { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; color: #0a1a2b; line-height: 1.2; }
+  .print-brand-tag { font-size: 0.8rem; color: #555; margin-top: 2px; }
+  .print-meta { text-align: right; font-size: 0.78rem; color: #333; white-space: nowrap; }
+  .print-meta div { margin-bottom: 3px; }
+  .print-meta span { color: #888; margin-right: 5px; }
+  .print-meta b { font-family: var(--font-mono); }
+  .print-report-header .print-disclaimer { font-size: 0.76rem; color: #555; margin: 12px 0 0; }
 
+  .result-kicker { color: #0c8c86; }
   .result-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
   .image-frame, .result-card, .explanation-text { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
   .gradcam-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; break-inside: avoid; }
-  .gradcam-section, .explanation-section { break-inside: avoid; margin-top: 20px; }
+  .gradcam-section, .explanation-section { break-inside: avoid; margin-top: 22px; }
+  .gradcam-section h2, .explanation-section h2, .result-card b { font-size: 1.05rem !important; }
+
+  .print-report-footer {
+    display: block; margin-top: 28px; padding-top: 12px; border-top: 1px solid #ccc;
+    font-size: 0.72rem; color: #888; text-align: center;
+  }
 }
 
 @media (max-width: 980px) {
