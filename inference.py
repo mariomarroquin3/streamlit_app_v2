@@ -27,23 +27,17 @@ from PIL import Image
 
 BASE_DIR = Path(__file__).parent
 MODEL_PATH = BASE_DIR / "model" / "best_model_v2.pth"
-<<<<<<< Updated upstream
-IMG_SIZE = 300
-# Tamaño de las imágenes de diagnóstico (preprocesada, mapa de calor,
-# Grad-CAM superpuesto) que se devuelven para mostrarlas en la interfaz.
-# Es solo para presentación — el modelo siempre recibe la imagen a IMG_SIZE
-# (300×300) vía eval_transform, sin importar este valor. Se usa LANCZOS al
-# redimensionar para que ampliar no se vea borroso/pixelado.
-DISPLAY_IMG_SIZE = 600
-MODEL_NAME = "efficientnet_b3"
-=======
 IMG_SIZE = 512
 CROP_THRESH_FRAC = 0.08
 BEN_GRAHAM_SIGMA_DIV = 30
+# Tamaño de las imágenes de diagnóstico (preprocesada, mapa de calor,
+# Grad-CAM superpuesto) que se devuelven para mostrarlas en la interfaz.
+# Es solo para presentación — el modelo siempre recibe la imagen a IMG_SIZE
+# vía eval_transform, sin importar este valor. Se usa LANCZOS al
+# redimensionar para que ampliar no se vea borroso/pixelado.
 DISPLAY_IMG_SIZE = 600
 MODEL_NAME = "tf_efficientnet_b3.ns_jft_in1k"
 FALLBACK_MODEL_NAME = "efficientnet_b3"
->>>>>>> Stashed changes
 NUM_CLASSES = 5
 
 CLASS_NAMES = {
@@ -247,7 +241,6 @@ def compute_pseudo_probabilities(
 # ============================================================
 # MODELO — carga perezosa, thread-safe, una sola vez por proceso
 # ============================================================
-<<<<<<< HEAD
 DEFAULT_TEST_METRICS = {
     "qwk": 0.7806,  # Medido en validación (fold 0), modelo de regresión
     "f1_macro": 0.6124,
@@ -269,8 +262,6 @@ DEFAULT_VAL_METRICS = {
 }
 
 
-=======
->>>>>>> parent of ae9eee4 (mejor modelo 0.75 qwk)
 class _ModelHolder:
     """Singleton con lock para servir el modelo de forma segura en un servidor
     multi-hilo (equivalente funcional a @st.cache_resource de Streamlit)."""
@@ -299,7 +290,6 @@ class _ModelHolder:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         checkpoint = torch.load(MODEL_PATH, map_location=device, weights_only=False)
 
-<<<<<<< HEAD
         # 1. Cargar y ordenar thresholds obligatorios desde el checkpoint
         if "thresholds" in checkpoint:
             raw_thresholds = checkpoint["thresholds"]
@@ -346,23 +336,11 @@ class _ModelHolder:
         val_metrics = {**DEFAULT_VAL_METRICS, **raw_val}
         val_metrics["qwk"] = best_val_qwk
 
-=======
-        model = timm.create_model(
-            checkpoint.get("model_name", MODEL_NAME),
-            pretrained=False,
-            num_classes=checkpoint.get("num_classes", NUM_CLASSES),
-        )
-        model.load_state_dict(checkpoint["model_state_dict"])
-        model.to(device)
-        model.eval()
-
->>>>>>> parent of ae9eee4 (mejor modelo 0.75 qwk)
         self._model = model
         self._device = device
         self._thresholds = thresholds
         self._metadata = {
             "img_size": checkpoint.get("img_size", IMG_SIZE),
-<<<<<<< HEAD
             "val_metrics": val_metrics,
             "test_metrics": test_metrics,
             "best_epoch": epoch_val,
@@ -371,11 +349,6 @@ class _ModelHolder:
             "num_classes": NUM_CLASSES,
             "is_regression": True,
             "thresholds": thresholds.tolist(),
-=======
-            "val_metrics": checkpoint.get("val_metrics", {}),
-            "test_metrics": checkpoint.get("test_metrics", {}),
-            "best_epoch": checkpoint.get("best_epoch"),
->>>>>>> parent of ae9eee4 (mejor modelo 0.75 qwk)
         }
 
 
@@ -417,10 +390,7 @@ class GradCAM:
         para el modelo de regresión, calculando la clase y la distribución de confianza."""
         self.model.eval()
         output = self.model(input_tensor)
-        if target_class is None:
-            target_class = output.argmax(dim=1).item()
 
-<<<<<<< HEAD
         # Regresión continua: predecir float y mapear con thresholds
         pred_continuo = output.squeeze(1).item()
         pred_continuo = float(max(0.0, min(4.0, pred_continuo)))
@@ -429,10 +399,6 @@ class GradCAM:
 
         self.model.zero_grad()
         output.squeeze().backward()
-=======
-        self.model.zero_grad()
-        output[0, target_class].backward()
->>>>>>> parent of ae9eee4 (mejor modelo 0.75 qwk)
 
         pooled_gradients = self.gradients.mean(dim=[0, 2, 3])
         activations = self.activations[0].clone()
@@ -443,12 +409,7 @@ class GradCAM:
         heatmap = np.maximum(heatmap, 0)
         heatmap = heatmap / (heatmap.max() + 1e-8)
 
-<<<<<<< HEAD
         return heatmap, predicted_class, probs, pred_continuo
-=======
-        probs = torch.softmax(output, dim=1)[0].detach().cpu().numpy()
-        return heatmap, target_class, probs
->>>>>>> parent of ae9eee4 (mejor modelo 0.75 qwk)
 
 
 def overlay_heatmap(heatmap: np.ndarray, original_image_pil: Image.Image, alpha: float = 0.45):
