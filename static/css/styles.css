@@ -452,7 +452,7 @@ hr.divider { border: none; border-top: 1px solid var(--line); margin: 0; }
 .gradcam-section { margin-top: 40px; }
 .gradcam-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 18px; }
 
-.download-row { margin-top: 24px; display: flex; justify-content: flex-end; }
+.download-row { margin-top: 24px; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
 
 /* =====================================================================
    INCERTIDUMBRE — el modelo se abstiene de afirmar una clase concreta
@@ -524,6 +524,13 @@ hr.divider { border: none; border-top: 1px solid var(--line); margin: 0; }
 .history-clear-btn:hover { color: var(--sev-3); }
 .history-privacy-note { font-size: 0.72rem; color: var(--text-3); margin: 6px 0 12px; line-height: 1.4; }
 .history-list { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; padding-right: 4px; }
+.history-export-btn {
+  display: block; width: 100%; margin-top: 12px; padding: 8px 12px;
+  background: transparent; border: 1.5px solid var(--line); border-radius: var(--radius-sm);
+  color: var(--text-2); font-size: 0.76rem; font-weight: 600; cursor: pointer; text-align: center;
+}
+.history-export-btn:hover { border-color: var(--teal); color: var(--teal-deep); }
+[data-theme="dark"] .history-export-btn:hover { color: var(--teal-bright); }
 .history-item { display: flex; align-items: center; gap: 10px; padding: 6px; border-radius: var(--radius-sm); transition: background 0.15s ease; }
 .history-item:hover { background: var(--line-soft); }
 .history-item img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 2px solid var(--line); }
