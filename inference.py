@@ -26,7 +26,7 @@ import torchvision.transforms as T
 from PIL import Image
 
 BASE_DIR = Path(__file__).parent
-MODEL_PATH = BASE_DIR / "model" / "best_model_v2.pth"
+MODEL_PATH = BASE_DIR / "model" / "best_checkpoint_full_fold0.pth"
 IMG_SIZE = 512
 CROP_THRESH_FRAC = 0.08
 BEN_GRAHAM_SIGMA_DIV = 30
@@ -284,7 +284,7 @@ class _ModelHolder:
         if not MODEL_PATH.exists():
             raise FileNotFoundError(
                 f"No se encontró el checkpoint del modelo en {MODEL_PATH}. "
-                "Verifica que 'model/best_model_v2.pth' esté presente."
+                "Verifica que 'model/best_checkpoint_full_fold0.pth' esté presente."
             )
 
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

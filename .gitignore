@@ -32,5 +32,7 @@ CLAUDE.md
 .DS_Store
 Thumbs.db
 model/best_model_v2.pth
-model/best_model_v2.pth
-model/best_model_v2.pth
+model/best_checkpoint_full_fold0
+# .pth de 123 MB: supera el límite de 100 MB por archivo de GitHub (sin Git
+# LFS). Se queda solo local; MODEL_PATH en inference.py ya apunta ahí.
+model/best_checkpoint_full_fold0.pth
