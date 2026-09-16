@@ -1570,7 +1570,10 @@ hr.divider { border: none; border-top: 1px solid var(--line); margin: 0; }
   bottom: 24px;
   left: 50%;
   transform: translateX(-50%) translateY(20px);
-  background: var(--ink);
+  /* Fondo oscuro fijo (no var(--ink)): en tema oscuro --ink se redefine a un
+     color claro para servir de texto, así que el toast quedaba con fondo
+     claro y letras blancas encima — casi ilegible. */
+  background: #14232f;
   color: #fff;
   padding: 12px 20px;
   border-radius: 999px;
