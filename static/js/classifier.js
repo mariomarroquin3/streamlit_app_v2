@@ -33,10 +33,12 @@
   const printReportBtn = document.getElementById("printReportBtn");
   const printReportDate = document.getElementById("printReportDate");
   const printReportId = document.getElementById("printReportId");
+  const reminderBtn = document.getElementById("reminderBtn");
 
   const historyPanel = document.getElementById("historyPanel");
   const historyList = document.getElementById("historyList");
   const historyClearBtn = document.getElementById("historyClearBtn");
+  const historyExportBtn = document.getElementById("historyExportBtn");
   const historyTrend = document.getElementById("historyTrend");
 
   const reportIssueBtn = document.getElementById("reportIssueBtn");
@@ -56,6 +58,11 @@
   const explanationSource = document.getElementById("explanationSource");
 
   let lastClassificationResult = null;
+  // URL.createObjectURL nunca se libera solo: sin revokeObjectURL, cada
+  // imagen subida en la sesión se queda reservada en memoria hasta que se
+  // cierra la pestaña. Se guarda la última para revocarla antes de crear
+  // la siguiente (o al quitar la imagen actual).
+  let currentPreviewObjectUrl = null;
 
   if (!dropzone) return; // esta página no está activa
 
@@ -197,6 +204,70 @@
     });
   }
 
+  // Exporta la tabla completa del historial a una ventana imprimible aparte
+  // (no reutiliza @media print de la página principal, que está pensada
+  // para el resultado de una sola clasificación con sus imágenes Grad-CAM).
+  function exportHistoryPdf() {
+    const history = loadHistory();
+    if (history.length === 0) return;
+
+    const printWindow = window.open("", "_blank", "width=900,height=1000");
+    if (!printWindow) {
+      alert("El navegador bloqueó la ventana de impresión. Habilita las ventanas emergentes para exportar el historial.");
+      return;
+    }
+
+    const rows = history
+      .map(function (entry) {
+        return (
+          "<tr>" +
+          "<td>" + (entry.thumbnail ? '<img src="' + entry.thumbnail + '" alt="">' : "") + "</td>" +
+          "<td>" + formatHistoryDate(entry.timestamp) + "</td>" +
+          "<td>Clase " + entry.predicted_class + " — " + entry.class_name + (entry.is_uncertain ? " (incierto)" : "") + "</td>" +
+          "<td>" + (entry.confidence * 100).toFixed(1) + "%</td>" +
+          "</tr>"
+        );
+      })
+      .join("");
+
+    const doc = printWindow.document;
+    doc.open();
+    doc.write(
+      "<!DOCTYPE html><html lang=\"es\"><head><meta charset=\"utf-8\">" +
+      "<title>Historial RetinoVision AI</title>" +
+      "<style>" +
+      "body{font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;padding:32px;}" +
+      "h1{font-size:20px;margin:0 0 4px;}" +
+      "p.sub{color:#555;margin:0 0 24px;font-size:13px;}" +
+      "table{width:100%;border-collapse:collapse;}" +
+      "th,td{text-align:left;padding:8px 10px;border-bottom:1px solid #ddd;font-size:13px;vertical-align:middle;}" +
+      "img{width:44px;height:44px;border-radius:6px;object-fit:cover;display:block;}" +
+      "footer{margin-top:24px;font-size:11px;color:#777;}" +
+      "</style></head><body>" +
+      "<h1>Historial de clasificaciones — RetinoVision AI</h1>" +
+      "<p class=\"sub\">Generado el " +
+      new Date().toLocaleString("es-SV", { dateStyle: "long", timeStyle: "short" }) +
+      " · " + history.length + " registro(s) guardados en este navegador</p>" +
+      "<table><thead><tr><th></th><th>Fecha</th><th>Resultado</th><th>Confianza</th></tr></thead><tbody>" +
+      rows +
+      "</tbody></table>" +
+      "<footer>Historial almacenado únicamente en este navegador (localStorage), nunca enviado a un servidor. " +
+      "RetinoVision AI es una herramienta académica/demostrativa (competencia EUREKA); no sustituye una evaluación " +
+      "oftalmológica profesional.</footer>" +
+      "</body></html>"
+    );
+    doc.close();
+
+    printWindow.onload = function () {
+      printWindow.focus();
+      printWindow.print();
+    };
+  }
+
+  if (historyExportBtn) {
+    historyExportBtn.addEventListener("click", exportHistoryPdf);
+  }
+
   renderHistoryPanel(); // mostrar historial previo (si existe) al cargar la página
 
   function formatBytes(bytes) {
@@ -231,7 +302,9 @@
       return;
     }
 
-    previewThumb.src = URL.createObjectURL(file);
+    if (currentPreviewObjectUrl) URL.revokeObjectURL(currentPreviewObjectUrl);
+    currentPreviewObjectUrl = URL.createObjectURL(file);
+    previewThumb.src = currentPreviewObjectUrl;
     previewName.textContent = file.name;
     previewMeta.textContent = formatBytes(file.size);
     previewStrip.style.display = "flex";
@@ -475,6 +548,88 @@
     });
   }
 
+  // --- Recordatorio de próxima revisión (.ics) ---
+  // Plazos alineados con la conducta clínica descrita para cada clase en
+  // rag_knowledge.py (control anual / 6-12 meses / semanas a pocos meses /
+  // días a pocas semanas / urgente en días). Un resultado incierto no tiene
+  // una clase confiable asociada, así que usa un plazo corto y genérico en
+  // vez del de la clase top (que el propio sistema decidió no afirmar).
+  const REMINDER_DAYS_BY_CLASS = { 0: 365, 1: 180, 2: 45, 3: 14, 4: 3 };
+  const REMINDER_DAYS_UNCERTAIN = 14;
+
+  function reminderDaysFor(data) {
+    if (data.is_uncertain) return REMINDER_DAYS_UNCERTAIN;
+    return REMINDER_DAYS_BY_CLASS[data.predicted_class] || 180;
+  }
+
+  function icsDate(d) {
+    return (
+      String(d.getFullYear()).padStart(4, "0") +
+      String(d.getMonth() + 1).padStart(2, "0") +
+      String(d.getDate()).padStart(2, "0")
+    );
+  }
+
+  function icsEscape(text) {
+    return String(text)
+      .replace(/\\/g, "\\\\")
+      .replace(/;/g, "\\;")
+      .replace(/,/g, "\\,")
+      .replace(/\n/g, "\\n");
+  }
+
+  function buildReminderIcs(data) {
+    const days = reminderDaysFor(data);
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() + days);
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 1); // DTEND es exclusivo en eventos de día completo (RFC 5545)
+
+    const uid = "retinovision-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8) + "@retinovision.local";
+    const description = icsEscape(
+      "Recordatorio generado a partir de tu clasificación con RetinoVision AI: Clase " +
+        data.predicted_class + " — " + data.class_name + " (" + (data.confidence * 100).toFixed(1) + "% de confianza)" +
+        (data.is_uncertain ? ". El sistema marcó este resultado como incierto." : ".") +
+        " Esta app es una herramienta académica/demostrativa, no un diagnóstico médico: agenda tu cita con un " +
+        "profesional de salud oftalmológica."
+    );
+
+    return [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//RetinoVision AI//Recordatorio//ES",
+      "CALSCALE:GREGORIAN",
+      "BEGIN:VEVENT",
+      "UID:" + uid,
+      "DTSTAMP:" + new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z",
+      "DTSTART;VALUE=DATE:" + icsDate(startDate),
+      "DTEND;VALUE=DATE:" + icsDate(endDate),
+      "SUMMARY:" + icsEscape("Revisión oftalmológica de seguimiento (RetinoVision AI)"),
+      "DESCRIPTION:" + description,
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\r\n");
+  }
+
+  function downloadReminder() {
+    if (!lastClassificationResult) return;
+
+    const ics = buildReminderIcs(lastClassificationResult);
+    const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "recordatorio-retinovision.ics";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  if (reminderBtn) {
+    reminderBtn.addEventListener("click", downloadReminder);
+  }
+
   // --- Interacciones de subida ---
   dropzone.addEventListener("click", function () {
     fileInput.click();
@@ -510,6 +665,10 @@
   clearBtn.addEventListener("click", function () {
     fileInput.value = "";
     previewStrip.style.display = "none";
+    if (currentPreviewObjectUrl) {
+      URL.revokeObjectURL(currentPreviewObjectUrl);
+      currentPreviewObjectUrl = null;
+    }
     hideError();
     resetResults();
   });
