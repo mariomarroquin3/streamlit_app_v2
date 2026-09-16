@@ -95,12 +95,16 @@
         hacia la clase mayoritaria, se aplicaron:
       </p>
       <ul>
-        <li><b>Focal Loss con pesos por clase</b> — penaliza con mayor severidad las clasificaciones erróneas en clases minoritarias.</li>
-        <li><b>Aumento extremo de datos</b> — rotación, volteo, jitter de color y random erasing aplicados dinámicamente durante el entrenamiento.</li>
-        <li><b>Regularización estructural</b> — dropout, stochastic depth (drop-path) y weight decay en el backbone de EfficientNet-B3.</li>
+        <li><b>Formulación de regresión ordinal con umbrales calibrados</b> — optimiza directamente la distancia ordinal entre grados en lugar de tratar las clases como categorías inconexas.</li>
+        <li><b>Optimización de umbrales para QWK</b> — thresholds aprendidos dinámicamente en validación para maximizar el índice Quadratic Weighted Kappa.</li>
+        <li><b>Aumento extremo de datos</b> — rotación, volteo, jitter de color y variaciones de iluminación aplicados dinámicamente durante el entrenamiento.</li>
+        <li><b>Regularización estructural</b> — dropout, stochastic depth (drop-path) y weight decay en el backbone EfficientNet-B3.</li>
       </ul>
       <p class="note">
-        Nota: a pesar de estas mitigaciones, la clase "leve" (nivel 1) continúa representando el desafío
+        Nota de evaluación: el valor de <b>QWK 0.7806</b> corresponde a la evaluación de validación sobre un solo fold (Fold 0, no ensamble todavía). Al incorporar un ensamble de 5 folds en fases posteriores, el desempeño global podrá consolidarse y balancearse aún más.
+      </p>
+      <p class="note">
+        Nota clínica: a pesar de estas mitigaciones, la clase "leve" (nivel 1) continúa representando el desafío
         diagnóstico más alto debido a la sutil diferencia física en los microaneurismas tempranos.
       </p>
     </div>

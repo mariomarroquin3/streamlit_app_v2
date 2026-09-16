@@ -49,23 +49,23 @@
     <div class="step-grid">
       <div class="step-card">
         <div class="step-number">01</div>
-        <b>Recorte de borde negro</b>
-        <p>Elimina los márgenes inactivos de la fotografía para centrarse únicamente en el círculo retinal.</p>
+        <b>Recorte adaptativo</b>
+        <p>Elimina márgenes negros mediante umbral relativo al brillo máximo conservando la proporción anatómica con relleno centrado.</p>
       </div>
       <div class="step-card">
         <div class="step-number">02</div>
-        <b>Realce CLAHE</b>
-        <p>Histograma local adaptativo que incrementa el contraste local, resaltando lesiones pequeñas o microaneurismas.</p>
+        <b>Normalización Ben Graham</b>
+        <p>Aplica desenfoque gaussiano ponderado (aditivo y sustractivo) para homogeneizar la iluminación y resaltar estructuras retinales críticas.</p>
       </div>
       <div class="step-card">
         <div class="step-number">03</div>
         <b>Máscara circular</b>
-        <p>Aplica un filtro que enmascara y remueve cualquier ruido o artefacto fuera del área circular de la retina.</p>
+        <p>Aplica un filtro circular que delimita el campo visual de la retina (radio 49%) y remueve artefactos en las esquinas.</p>
       </div>
       <div class="step-card">
         <div class="step-number">04</div>
-        <b>Normalización</b>
-        <p>Redimensiona la imagen a 300×300 píxeles y aplica normalización estadística estándar del dataset ImageNet.</p>
+        <b>Normalización ImageNet</b>
+        <p>Redimensiona a 512×512 píxeles y estandariza las medias y desviaciones estándar según los valores de ImageNet.</p>
       </div>
     </div>
   </div>
@@ -78,10 +78,10 @@
     <div>
       <h2>Detalles del modelo</h2>
       <ul>
-        <li><b>Arquitectura:</b> backbone convolucional EfficientNet-B3, preentrenado en ImageNet (librería <code>timm</code>).</li>
-        <li><b>Función de pérdida:</b> Focal Loss ponderada por clase. Ayuda a ignorar muestras ya aprendidas con facilidad y obliga al modelo a concentrarse en las clases raras y casos límite.</li>
-        <li><b>Regularización:</b> Stochastic Depth (drop-path), Dropout y Weight Decay para mitigar sobreajustes hacia la clase mayoritaria.</li>
-        <li><b>Entrenamiento:</b> realizado en dos fases (congelación inicial del extractor y fine-tuning completo posterior) con tasas de aprendizaje diferenciadas y scheduler <code>ReduceLROnPlateau</code>.</li>
+        <li><b>Arquitectura:</b> backbone convolucional <code>tf_efficientnet_b3.ns_jft_in1k</code> (EfficientNet-B3) vía librería <code>timm</code>.</li>
+        <li><b>Formulación:</b> modelo de regresión continua ordinal (<code>num_classes=1</code>) acoplado a umbrales de decisión calibrados por optimización directa de QWK.</li>
+        <li><b>Regularización:</b> Stochastic Depth (drop-path), Dropout y Weight Decay para mitigar sobreajustes hacia las etapas tempranas.</li>
+        <li><b>Desempeño y validación:</b> QWK de <b>0.7806</b> medido en validación sobre un solo fold (Fold 0), con inferencia nativa a resolución 512×512.</li>
       </ul>
     </div>
     <div>

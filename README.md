@@ -84,9 +84,7 @@ memoria la primera vez que lo necesita.
 - **Arquitectura cliente-servidor real**: la clasificación ocurre vía `fetch` a una API JSON
   (`/api/clasificar`), lo que hace mucho más simple desplegar el frontend y el backend por
   separado si se desea en el futuro.
-- **La lógica de IA no cambió**: mismo backbone (EfficientNet-B3), mismo pipeline de
-  preprocesamiento (recorte de borde negro → CLAHE → máscara circular → normalización), mismo
-  algoritmo de Grad-CAM sobre `conv_head`, mismas métricas guardadas en el checkpoint.
+- **Modelo de regresión ordinal y preprocesamiento Ben Graham**: backbone EfficientNet-B3 (`tf_efficientnet_b3.ns_jft_in1k`) con `num_classes=1` acoplado a umbrales de decisión calibrados por optimización de QWK (`best_val_qwk: 0.7806` en Fold 0), preprocesamiento con recorte adaptativo relativo, normalización Ben Graham y enmascaramiento circular a 512×512, con Grad-CAM aplicado directamente sobre la activación continua en `conv_head`.
 
 ## Aviso
 

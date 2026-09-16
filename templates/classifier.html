@@ -40,10 +40,10 @@
 
       <h3>Preprocesamiento</h3>
       <ol>
-        <li>Recorte de borde negro</li>
-        <li>CLAHE (realce local de contraste)</li>
-        <li>Máscara circular retinal</li>
-        <li>Redimensión + normalización ImageNet</li>
+        <li>Recorte de borde (umbral relativo)</li>
+        <li>Normalización estilo Ben Graham</li>
+        <li>Máscara circular retinal (radio 0.49)</li>
+        <li>Normalización estadística ImageNet</li>
       </ol>
 
       <div class="history-panel" id="historyPanel" style="display:none;">
@@ -131,9 +131,19 @@
               <span class="label">nivel de confianza</span>
               <span class="confidence-tag" id="confidenceTag"></span>
             </div>
+<<<<<<< Updated upstream
+=======
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
             <p class="history-trend" id="historyTrend" style="display:none;"></p>
             <b style="font-size:0.9rem;">Distribución de probabilidades por clase</b>
+=======
+            <b style="font-size:0.9rem;">Distribución de confianza por clase</b>
+>>>>>>> Stashed changes
             <div class="prob-list" id="probList" style="margin-top:12px;"></div>
+            <p style="font-size:0.75rem; color:var(--text-muted, #64748b); margin-top:6px; margin-bottom:14px;">
+              * Estimación visual de proximidad a los umbrales de severidad (modelo de regresión ordinal continua).
+            </p>
 
             <div class="feedback-block no-print">
               <button type="button" class="feedback-toggle" id="reportIssueBtn">
